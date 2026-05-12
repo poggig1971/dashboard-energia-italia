@@ -6,17 +6,14 @@
     <title>Dashboard Energia Italia — ANCE Piemonte VdA</title>
     <meta name="description" content="Dashboard pubblica sui prezzi e consumi energetici in Italia. Elaborazione ANCE Piemonte e Valle d'Aosta su dati MASE, MIMIT, Terna, GME, ARERA, Eurostat.">
 
-    <!-- IBM Plex Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Stile -->
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
 
-    <!-- HEADER -->
     <header class="dashboard-header">
         <div class="header-content">
             <div class="header-logo">
@@ -42,7 +39,6 @@
         </div>
     </header>
 
-    <!-- TAB NAVIGATION -->
     <nav class="tab-nav">
         <button class="tab-btn active" data-tab="prezzi-correnti">Prezzi correnti</button>
         <button class="tab-btn" data-tab="variazioni">Variazioni %</button>
@@ -51,14 +47,10 @@
         <button class="tab-btn" data-tab="metodologia">Metodologia</button>
     </nav>
 
-    <!-- CONTENUTO TAB -->
     <main class="dashboard-main">
 
         <section id="tab-prezzi-correnti" class="tab-content active">
-            <div class="placeholder">
-                <h2>Prezzi correnti</h2>
-                <p>Sezione in costruzione. Sarà implementata nella Fase 3.</p>
-            </div>
+            <div class="loading">Caricamento dati in corso...</div>
         </section>
 
         <section id="tab-variazioni" class="tab-content">
@@ -91,21 +83,28 @@
 
     </main>
 
-    <!-- FOOTER -->
     <footer class="dashboard-footer">
         <p>
             Elaborazione <strong>ANCE Piemonte e Valle d'Aosta</strong> su dati pubblici di MASE, MIMIT, Terna, GME, ARERA, Eurostat.
             Aggiornamento automatico — ultimo refresh: <span id="last-refresh">in caricamento...</span>.
             I dati sono pubblicati a fini informativi e di studio. Per usi ufficiali consultare direttamente le fonti originali.
-            Licenza dati MIMIT: IODL 2.0.
+            Licenza dati MIMIT: IODL 2.0. Confini provinciali: <a href="https://github.com/openpolis/geojson-italy" target="_blank" rel="noopener">Openpolis</a> (CC-BY 4.0, su dati ISTAT).
         </p>
         <p class="footer-version">
-            Versione <span id="version">0.1.0-alpha</span> · <a href="https://github.com/poggig1971/dashboard-energia-italia" target="_blank" rel="noopener">Codice sorgente</a>
+            Versione <span id="version">0.2.0-alpha</span> · <a href="https://github.com/poggig1971/dashboard-energia-italia" target="_blank" rel="noopener">Codice sorgente</a>
         </p>
     </footer>
 
-    <!-- Scripts -->
+    <!-- Librerie esterne -->
+    <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
+    <!-- Codice app -->
     <script src="assets/js/config.js"></script>
+    <script src="assets/js/data-loader.js"></script>
+    <script src="assets/js/map.js"></script>
+    <script src="assets/js/prezzi-correnti.js"></script>
     <script src="assets/js/app.js"></script>
 </body>
 </html>
