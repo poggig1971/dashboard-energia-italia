@@ -311,7 +311,13 @@ HEADERS_CARBURANTI = [
 def upsert_settimana_corrente(spreadsheet, df: pd.DataFrame) -> int:
     """
     Aggiorna o inserisce le righe della settimana corrente nel tab.
-    Se la settimana esiste gia, sovrascrive le righe.
+
+    Strategia ottimizzata: per evitare il limite di 60 scritture/minuto
+    della Sheets API, NON cancelliamo riga per riga. Invece:
+    1. Leggiamo l'intero contenuto attuale
+    2. Filtriamo via le righe della settimana corrente (in memoria)
+    3. Aggiungiamo le righe nuove
+    4. Sovrascriviamo tutto il tab in UN'UNICA operazione bulk
     """
     worksheet = get_or_create_worksheet(
         spreadsheet,
@@ -321,31 +327,52 @@ def upsert_settimana_corrente(spreadsheet, df: pd.DataFrame) -> int:
     )
 
     all_values = worksheet.get_all_values()
-    if len(all_values) <= 1:
-        rows_to_write = df.fillna("").values.tolist()
-        worksheet.append_rows(rows_to_write, value_input_option="USER_ENTERED")
-        logger.info(f"Foglio vuoto: scritte {len(rows_to_write)} righe")
-        return len(rows_to_write)
-
     settimana = df["data_settimana"].iloc[0]
+
+    # Caso foglio vuoto: scrivi header + tutti i dati
+    if len(all_values) <= 1:
+        rows_to_write = [HEADERS_CARBURANTI] + df.fillna("").astype(str).values.tolist()
+        worksheet.clear()
+        worksheet.update(
+            values=rows_to_write,
+            range_name="A1",
+            value_input_option="USER_ENTERED",
+        )
+        logger.info(f"Foglio vuoto: scritte {len(rows_to_write) - 1} righe")
+        return len(df)
+
+    # Caso foglio popolato: filtra in memoria
     header_row = all_values[0]
     idx_settimana = header_row.index("data_settimana")
 
-    righe_esistenti = [
-        i for i, row in enumerate(all_values[1:], start=2)
-        if len(row) > idx_settimana and row[idx_settimana] == settimana
+    # Tieni solo le righe che NON sono della settimana corrente
+    righe_da_mantenere = [
+        row for row in all_values[1:]
+        if not (len(row) > idx_settimana and row[idx_settimana] == settimana)
     ]
+    n_rimosse = len(all_values) - 1 - len(righe_da_mantenere)
+    if n_rimosse > 0:
+        logger.info(f"Rimosse {n_rimosse} righe vecchie per settimana {settimana}")
 
-    if righe_esistenti:
-        logger.info(f"Trovate {len(righe_esistenti)} righe esistenti per settimana {settimana}: le sostituisco")
-        for idx in sorted(righe_esistenti, reverse=True):
-            worksheet.delete_rows(idx)
+    # Aggiungi le nuove righe della settimana corrente
+    nuove_righe = df.fillna("").astype(str).values.tolist()
 
-    rows_to_write = df.fillna("").values.tolist()
-    worksheet.append_rows(rows_to_write, value_input_option="USER_ENTERED")
-    logger.info(f"Aggiunte {len(rows_to_write)} righe per settimana {settimana}")
+    # Costruisci il contenuto totale: header + righe vecchie + righe nuove
+    contenuto_completo = [HEADERS_CARBURANTI] + righe_da_mantenere + nuove_righe
 
-    return len(rows_to_write)
+    # UN'UNICA operazione bulk: clear + update
+    worksheet.clear()
+    worksheet.update(
+        values=contenuto_completo,
+        range_name="A1",
+        value_input_option="USER_ENTERED",
+    )
+    logger.info(
+        f"Scritte {len(nuove_righe)} righe nuove per settimana {settimana} "
+        f"(totale righe nel tab: {len(contenuto_completo) - 1})"
+    )
+
+    return len(nuove_righe)
 
 
 # MAIN
