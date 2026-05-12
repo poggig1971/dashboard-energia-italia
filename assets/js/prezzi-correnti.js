@@ -93,6 +93,18 @@ const PrezziCorrentiTab = (function () {
      */
     function renderControls() {
         const html = `
+            <div class="tab-controls" style="margin-bottom: 12px;">
+                <div class="control-group" style="flex: 1;">
+                    <span class="control-label">Trova provincia:</span>
+                    <div id="province-finder-wrap" style="flex: 1; max-width: 400px;"></div>
+                </div>
+            </div>
+
+            <div id="selected-province-badge" class="selected-province-badge">
+                <span class="badge-label">Provincia selezionata:</span>
+                <span class="badge-value" id="badge-nome"></span>
+                <button id="badge-clear">Mostra tutta Italia ×</button>
+            </div>
             <div class="tab-controls">
                 <div class="control-group">
                     <span class="control-label">Carburante:</span>
@@ -171,6 +183,24 @@ const PrezziCorrentiTab = (function () {
                 state.rankingLimit = lim === "all" ? null : parseInt(lim);
                 renderRanking();
             });
+        });
+
+        // Inizializzazione cercatore province
+        const provinceList = Object.entries(state.anagrafica).map(([sigla, info]) => ({
+            sigla: sigla,
+            nome: info.nome,
+            regione: info.regione,
+            macro_area: info.macro_area,
+        })).sort((a, b) => a.nome.localeCompare(b.nome, "it"));
+
+        ProvinceFinder.init("#province-finder-wrap", provinceList, {
+            onSelect: handleProvinciaSelezionata,
+            onClear: handleProvinciaDeseleziona,
+        });
+
+        document.getElementById("badge-clear").addEventListener("click", () => {
+            ProvinceFinder.reset();
+            handleProvinciaDeseleziona();
         });
     }
 
@@ -281,6 +311,10 @@ const PrezziCorrentiTab = (function () {
             const macroLabel = { nord: "Nord", centro: "Centro", sud: "Sud e Isole" }[state.macroArea];
             rows = rows.filter(r => r.macro_area === macroLabel);
         }
+        // Filtra per provincia selezionata se attiva
+        if (state.provinciaSelezionata) {
+            rows = rows.filter(r => r.provincia_sigla === state.provinciaSelezionata);
+        }
 
         // Ordina per prezzo crescente
         rows.sort((a, b) => a[col] - b[col]);
@@ -372,9 +406,39 @@ const PrezziCorrentiTab = (function () {
     }
 
     function handleProvinceClick(sigla) {
+        // Click sulla mappa = seleziona provincia
+        handleProvinciaSelezionata(sigla);
+    }
+
+    /**
+     * Quando l'utente seleziona una provincia (da finder o click mappa):
+     * - mostra il badge in alto
+     * - evidenzia la provincia sulla mappa
+     * - filtra la classifica a quella sola provincia
+     */
+    function handleProvinciaSelezionata(sigla) {
         state.provinciaSelezionata = sigla;
-        // Per ora solo log; future: scheda dettaglio
-        console.log("[PrezziCorrenti] Cliccata provincia:", sigla);
+        const anagr = state.anagrafica[sigla];
+        if (!anagr) return;
+
+        const badge = document.getElementById("selected-province-badge");
+        const badgeNome = document.getElementById("badge-nome");
+        badgeNome.textContent = `${anagr.nome} (${sigla}) – ${anagr.regione}`;
+        badge.classList.add("active");
+
+        ItalyMap.highlightProvince(sigla);
+        renderRanking();
+    }
+
+    /**
+     * Reset selezione provincia.
+     */
+    function handleProvinciaDeseleziona() {
+        state.provinciaSelezionata = null;
+        const badge = document.getElementById("selected-province-badge");
+        badge.classList.remove("active");
+        ItalyMap.highlightProvince(null);
+        renderRanking();
     }
 
     // ─── Utility ─────────────────────────────────────────────────────
