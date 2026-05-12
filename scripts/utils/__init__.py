@@ -1,0 +1,1 @@
+"""Utility comuni agli script ETL."""
