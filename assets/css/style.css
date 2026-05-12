@@ -743,3 +743,18 @@ html, body {
 .selected-province-badge button:hover {
     color: var(--color-danger);
 }
+/* Suggerimento regione nel finder */
+.province-suggestion.suggestion-region {
+    background: #f0f9ff;
+    border-bottom: 1px solid #bfdbfe;
+}
+
+.province-suggestion.suggestion-region:hover,
+.province-suggestion.suggestion-region.highlighted {
+    background: #dbeafe;
+}
+
+.prov-sigla.region-badge {
+    background: #16a34a;
+    color: white;
+}
