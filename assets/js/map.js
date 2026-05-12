@@ -229,18 +229,7 @@ const ItalyMap = (function () {
      * Filtra l'opacità per un set arbitrario di sigle (es. tutte le province di una regione).
      * Passando null, ripristina tutte.
      */
-    function filterByProvinceSet(sigleSet) {
-        if (!g) return;
-        if (!sigleSet || sigleSet.length === 0) {
-            g.selectAll("path.map-svg-province").classed("dimmed", false);
-            return;
-        }
-        const set = new Set(sigleSet);
-        g.selectAll("path.map-svg-province").each(function (d) {
-            const sigla = getSigla(d);
-            d3.select(this).classed("dimmed", !set.has(sigla));
-        });
-    }/**
+    /**
      * Filtra l'opacità per un set arbitrario di sigle (es. tutte le province di una regione).
      * Passando null, ripristina tutte.
      */
