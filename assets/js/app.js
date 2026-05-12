@@ -1,17 +1,28 @@
 /**
  * App principale Dashboard Energia Italia
  *
- * Gestisce navigazione tab e bootstrap iniziale.
- * Le funzionalità complete verranno aggiunte nelle fasi successive.
+ * Orchestra navigazione tab, caricamento dati, bootstrap iniziale.
  */
+
+let tabsLoaded = {
+    "prezzi-correnti": false,
+    "variazioni": false,
+    "spesa-stimata": false,
+    "serie-storica": false,
+    "metodologia": false,
+};
 
 document.addEventListener("DOMContentLoaded", function () {
     initTabs();
+    initRefreshButton();
     initFooterMeta();
+
+    // Carica subito la prima tab attiva
+    loadTab("prezzi-correnti");
 });
 
 /**
- * Gestione del cambio tab
+ * Gestione cambio tab + caricamento lazy del contenuto.
  */
 function initTabs() {
     const tabButtons = document.querySelectorAll(".tab-btn");
@@ -27,22 +38,65 @@ function initTabs() {
             tabContents.forEach(c => c.classList.remove("active"));
             const target = document.getElementById(`tab-${targetTab}`);
             if (target) target.classList.add("active");
+
+            loadTab(targetTab);
         });
     });
 }
 
 /**
- * Popola la versione nel footer da CONFIG
- * In Fase 2 sostituiremo il "last-refresh" con il timestamp reale dal Sheet
+ * Carica il contenuto di una tab al primo accesso.
  */
-function initFooterMeta() {
+function loadTab(tabName) {
+    if (tabsLoaded[tabName]) return;
+
+    switch (tabName) {
+        case "prezzi-correnti":
+            if (window.PrezziCorrentiTab) {
+                PrezziCorrentiTab.init();
+                tabsLoaded[tabName] = true;
+            }
+            break;
+        // Altre tab in fasi successive
+        default:
+            console.log(`[App] Tab "${tabName}" non ancora implementata`);
+    }
+}
+
+/**
+ * Bottone refresh: svuota cache e ricarica la tab corrente.
+ */
+function initRefreshButton() {
+    const btn = document.getElementById("btn-refresh");
+    if (!btn) return;
+    btn.addEventListener("click", () => {
+        if (window.DataLoader) DataLoader.clearCache();
+        for (const key in tabsLoaded) tabsLoaded[key] = false;
+        const activeBtn = document.querySelector(".tab-btn.active");
+        if (activeBtn) loadTab(activeBtn.dataset.tab);
+        updateLastRefresh();
+    });
+}
+
+/**
+ * Footer: versione + ultimo aggiornamento.
+ */
+async function initFooterMeta() {
     const versionEl = document.getElementById("version");
     if (versionEl && window.CONFIG) {
         versionEl.textContent = window.CONFIG.VERSION;
     }
+    updateLastRefresh();
+}
 
-    const refreshEl = document.getElementById("last-refresh");
-    if (refreshEl) {
-        refreshEl.textContent = "dati in popolamento (Fase 2)";
+async function updateLastRefresh() {
+    const el = document.getElementById("last-refresh");
+    if (!el) return;
+    el.textContent = "caricamento...";
+    try {
+        const ts = await DataLoader.getLastRefresh("MIMIT-carburanti");
+        el.textContent = ts || "n.d.";
+    } catch (err) {
+        el.textContent = "n.d.";
     }
 }
