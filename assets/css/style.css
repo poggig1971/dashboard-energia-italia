@@ -581,3 +581,165 @@ html, body {
         font-size: 24px;
     }
 }
+/* ========================================================================
+   PROVINCE FINDER - Ricerca con autocomplete
+   ======================================================================== */
+
+.province-finder {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: 6px 12px;
+    min-width: 280px;
+}
+
+.province-finder-icon {
+    color: var(--color-text-light);
+    font-size: 14px;
+}
+
+.province-finder input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--color-text);
+    background: transparent;
+    padding: 4px 0;
+}
+
+.province-finder input::placeholder {
+    color: var(--color-text-light);
+}
+
+.province-finder-clear {
+    background: none;
+    border: none;
+    color: var(--color-text-light);
+    cursor: pointer;
+    font-size: 16px;
+    padding: 0 4px;
+    line-height: 1;
+    display: none;
+}
+
+.province-finder-clear:hover {
+    color: var(--color-danger);
+}
+
+.province-finder-clear.active {
+    display: inline-block;
+}
+
+.province-finder-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    max-height: 260px;
+    overflow-y: auto;
+    z-index: 100;
+    display: none;
+}
+
+.province-finder-dropdown.active {
+    display: block;
+}
+
+.province-suggestion {
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 13px;
+    border-bottom: 1px solid var(--color-bg-alt);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.province-suggestion:last-child {
+    border-bottom: none;
+}
+
+.province-suggestion:hover,
+.province-suggestion.highlighted {
+    background: var(--color-bg-alt);
+}
+
+.province-suggestion .prov-name {
+    color: var(--color-text);
+    font-weight: 500;
+}
+
+.province-suggestion .prov-meta {
+    font-size: 11px;
+    color: var(--color-text-light);
+    font-family: var(--font-mono);
+}
+
+.province-suggestion .prov-sigla {
+    display: inline-block;
+    background: var(--color-primary);
+    color: white;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 600;
+    margin-right: 8px;
+    font-family: var(--font-mono);
+}
+
+.province-suggestion-empty {
+    padding: 12px;
+    text-align: center;
+    color: var(--color-text-light);
+    font-size: 12px;
+    font-style: italic;
+}
+
+/* Provincia selezionata: badge in evidenza sopra la mappa */
+.selected-province-badge {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: var(--radius);
+    padding: 8px 14px;
+    font-size: 13px;
+    margin-bottom: 12px;
+}
+
+.selected-province-badge.active {
+    display: flex;
+}
+
+.selected-province-badge .badge-label {
+    color: var(--color-text-light);
+}
+
+.selected-province-badge .badge-value {
+    font-weight: 600;
+    color: var(--color-primary);
+}
+
+.selected-province-badge button {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: var(--color-text-light);
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.selected-province-badge button:hover {
+    color: var(--color-danger);
+}
