@@ -10,12 +10,14 @@
 const PrezziCorrentiTab = (function () {
     // Stato corrente
     const state = {
-        carburante: "benzina",  // benzina | gasolio | gpl | metano
-        macroArea: "italia",     // italia | nord | centro | sud
-        rankingLimit: 10,        // 10 | 20 | null (tutte)
-        data: [],                // righe del CSV prezzi carburanti
-        anagrafica: {},          // sigla → { nome, regione, macro_area, popolazione }
+        carburante: "benzina",
+        macroArea: "italia",
+        rankingLimit: 10,
+        data: [],
+        anagrafica: {},
         provinciaSelezionata: null,
+        regioneSelezionata: null,    // nome regione + array sigle se filtro regionale attivo
+        regioneSigle: [],
     };
 
     // Mapping carburante → colonna CSV + label + unità
@@ -194,13 +196,14 @@ const PrezziCorrentiTab = (function () {
         })).sort((a, b) => a.nome.localeCompare(b.nome, "it"));
 
         ProvinceFinder.init("#province-finder-wrap", provinceList, {
-            onSelect: handleProvinciaSelezionata,
-            onClear: handleProvinciaDeseleziona,
+            onSelectProvince: handleProvinciaSelezionata,
+            onSelectRegione: handleRegioneSelezionata,
+            onClear: handleSelezioneRimossa,
         });
 
         document.getElementById("badge-clear").addEventListener("click", () => {
             ProvinceFinder.reset();
-            handleProvinciaDeseleziona();
+            handleSelezioneRimossa();
         });
     }
 
@@ -312,8 +315,14 @@ const PrezziCorrentiTab = (function () {
             rows = rows.filter(r => r.macro_area === macroLabel);
         }
         // Filtra per provincia selezionata se attiva
+        // Filtra per provincia singola selezionata
         if (state.provinciaSelezionata) {
             rows = rows.filter(r => r.provincia_sigla === state.provinciaSelezionata);
+        }
+
+        // Filtra per regione selezionata (mostra solo le province della regione)
+        if (state.regioneSelezionata) {
+            rows = rows.filter(r => r.regione === state.regioneSelezionata);
         }
 
         // Ordina per prezzo crescente
@@ -433,12 +442,62 @@ const PrezziCorrentiTab = (function () {
     /**
      * Reset selezione provincia.
      */
-    function handleProvinciaDeseleziona() {
+    /**
+     * Quando l'utente seleziona una regione dal finder:
+     * - mostra il badge con il nome della regione
+     * - filtra mappa e classifica a tutte le province di quella regione
+     */
+    function handleRegioneSelezionata(nomeRegione, sigleProvince) {
         state.provinciaSelezionata = null;
+        state.regioneSelezionata = nomeRegione;
+        state.regioneSigle = sigleProvince || [];
+
+        const badge = document.getElementById("selected-province-badge");
+        const badgeNome = document.getElementById("badge-nome");
+        badgeNome.textContent = `${nomeRegione} (${state.regioneSigle.length} province)`;
+        badge.classList.add("active");
+
+        ItalyMap.highlightProvince(null);
+        // Sbiadisce tutte le province che NON sono nella regione selezionata
+        ItalyMap.filterByProvinceSet(state.regioneSigle);
+        renderRanking();
+    }
+
+    /**
+     * Reset completo della selezione (provincia o regione).
+     */
+    function handleSelezioneRimossa() {
+        state.provinciaSelezionata = null;
+        state.regioneSelezionata = null;
+        state.regioneSigle = [];
         const badge = document.getElementById("selected-province-badge");
         badge.classList.remove("active");
         ItalyMap.highlightProvince(null);
+        ItalyMap.filterByProvinceSet(null); // ripristina tutte
+        // Riapplica eventuale filtro macro-area
+        applyMacroAreaToMap();
         renderRanking();
+    }
+
+    /**
+     * Ri-applica il filtro macro-area corrente alla mappa
+     * (utile dopo deselezione regione).
+     */
+    function applyMacroAreaToMap() {
+        const macroLabel = {
+            italia: null,
+            nord: "Nord",
+            centro: "Centro",
+            sud: "Sud e Isole",
+        }[state.macroArea];
+        ItalyMap.filterByMacroArea(macroLabel);
+    }
+
+    /**
+     * Reset chiamato dal pulsante "× Mostra tutta Italia"
+     */
+    function handleProvinciaDeseleziona() {
+        handleSelezioneRimossa();
     }
 
     // ─── Utility ─────────────────────────────────────────────────────
