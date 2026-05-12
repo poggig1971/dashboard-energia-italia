@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Energia Italia — ANCE Piemonte VdA</title>
+    <meta name="description" content="Dashboard pubblica sui prezzi e consumi energetici in Italia. Elaborazione ANCE Piemonte e Valle d'Aosta su dati MASE, MIMIT, Terna, GME, ARERA, Eurostat.">
+
+    <!-- IBM Plex Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Stile -->
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header class="dashboard-header">
+        <div class="header-content">
+            <div class="header-logo">
+                <img src="assets/img/logo-ance.png" alt="ANCE Piemonte Valle d'Aosta">
+            </div>
+            <div class="header-title">
+                <h1>Dashboard Energia Italia</h1>
+                <p class="header-subtitle">Prezzi e consumi energetici · elaborazione ANCE Piemonte e Valle d'Aosta</p>
+            </div>
+            <div class="header-actions">
+                <button id="btn-info" class="btn-icon" title="Come usare">?</button>
+                <button id="btn-refresh" class="btn-icon" title="Aggiorna dati">↻</button>
+            </div>
+        </div>
+        <div class="header-sources">
+            <span>Fonti:</span>
+            <a href="https://sisen.mase.gov.it/dgsaie/prezzi-settimanali-carburanti" target="_blank" rel="noopener">MASE</a> ·
+            <a href="https://www.mimit.gov.it/it/open-data/elenco-dataset/carburanti-prezzi-praticati-e-anagrafica-degli-impianti" target="_blank" rel="noopener">MIMIT</a> ·
+            <a href="https://dati.terna.it" target="_blank" rel="noopener">Terna</a> ·
+            <a href="https://gme.mercatoelettrico.org" target="_blank" rel="noopener">GME</a> ·
+            <a href="https://www.arera.it/dati-e-statistiche" target="_blank" rel="noopener">ARERA</a> ·
+            <a href="https://ec.europa.eu/eurostat" target="_blank" rel="noopener">Eurostat</a>
+        </div>
+    </header>
+
+    <!-- TAB NAVIGATION -->
+    <nav class="tab-nav">
+        <button class="tab-btn active" data-tab="prezzi-correnti">Prezzi correnti</button>
+        <button class="tab-btn" data-tab="variazioni">Variazioni %</button>
+        <button class="tab-btn" data-tab="spesa-stimata">Spesa stimata</button>
+        <button class="tab-btn" data-tab="serie-storica">Serie storica</button>
+        <button class="tab-btn" data-tab="metodologia">Metodologia</button>
+    </nav>
+
+    <!-- CONTENUTO TAB -->
+    <main class="dashboard-main">
+
+        <section id="tab-prezzi-correnti" class="tab-content active">
+            <div class="placeholder">
+                <h2>Prezzi correnti</h2>
+                <p>Sezione in costruzione. Sarà implementata nella Fase 3.</p>
+            </div>
+        </section>
+
+        <section id="tab-variazioni" class="tab-content">
+            <div class="placeholder">
+                <h2>Variazioni %</h2>
+                <p>Sezione in costruzione. Sarà implementata nella Fase 5.</p>
+            </div>
+        </section>
+
+        <section id="tab-spesa-stimata" class="tab-content">
+            <div class="placeholder">
+                <h2>Spesa stimata</h2>
+                <p>Sezione in costruzione. Sarà implementata nella Fase 5.</p>
+            </div>
+        </section>
+
+        <section id="tab-serie-storica" class="tab-content">
+            <div class="placeholder">
+                <h2>Serie storica</h2>
+                <p>Sezione in costruzione. Sarà implementata nella Fase 6.</p>
+            </div>
+        </section>
+
+        <section id="tab-metodologia" class="tab-content">
+            <div class="placeholder">
+                <h2>Metodologia</h2>
+                <p>Sezione in costruzione. Sarà implementata nella Fase 8.</p>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="dashboard-footer">
+        <p>
+            Elaborazione <strong>ANCE Piemonte e Valle d'Aosta</strong> su dati pubblici di MASE, MIMIT, Terna, GME, ARERA, Eurostat.
+            Aggiornamento automatico — ultimo refresh: <span id="last-refresh">in caricamento...</span>.
+            I dati sono pubblicati a fini informativi e di studio. Per usi ufficiali consultare direttamente le fonti originali.
+            Licenza dati MIMIT: IODL 2.0.
+        </p>
+        <p class="footer-version">
+            Versione <span id="version">0.1.0-alpha</span> · <a href="https://github.com/poggig1971/dashboard-energia-italia" target="_blank" rel="noopener">Codice sorgente</a>
+        </p>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="assets/js/config.js"></script>
+    <script src="assets/js/app.js"></script>
+</body>
+</html>

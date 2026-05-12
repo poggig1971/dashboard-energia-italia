@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+.venv/
+*.egg-info/
+
+# Credenziali (MAI committare!)
+*.json
+!**/package.json
+!**/package-lock.json
+!**/tsconfig.json
+.env
+.env.local
+service_account*.json
+credentials*.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build
+dist/
+build/
+*.log
+
+# Test data
+test_data/
+tmp/
