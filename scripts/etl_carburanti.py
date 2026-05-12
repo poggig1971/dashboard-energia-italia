@@ -117,11 +117,15 @@ CARBURANTI_MAP = {
 
 def download_csv(url: str, label: str) -> pd.DataFrame:
     """
-    Scarica un CSV da URL e lo restituisce come DataFrame.
+    Scarica un file CSV da URL e lo restituisce come DataFrame.
 
-    I file MIMIT hanno una particolarità: la prima riga contiene la data
-    di estrazione (es. "06/05/2026, 08:00:00"), quindi va saltata.
-    Il vero header è alla seconda riga (skiprows=1).
+    I file MIMIT hanno due particolarità:
+    1. La prima riga contiene la data di estrazione (es. "Estrazione del 2026-05-11")
+       quindi va saltata. Il vero header è alla seconda riga.
+    2. Il separatore è il pipe '|', non il punto e virgola.
+
+    Per robustezza autoriliviamo il separatore controllando se la prima
+    riga di intestazione contiene '|' oppure ';'.
     """
     logger.info(f"Download {label}: {url}")
     response = requests.get(url, timeout=60)
@@ -133,9 +137,30 @@ def download_csv(url: str, label: str) -> pd.DataFrame:
     except UnicodeDecodeError:
         text = response.content.decode("iso-8859-1")
 
+    # Auto-detect del separatore guardando la riga di header (la seconda)
+    lines = text.splitlines()
+    if len(lines) < 2:
+        raise ValueError(f"File {label} troppo corto: solo {len(lines)} righe")
+
+    header_line = lines[1]
+    if "|" in header_line:
+        sep = "|"
+    elif ";" in header_line:
+        sep = ";"
+    else:
+        sep = ","
+
+    logger.info(f"  Separatore rilevato: '{sep}'")
+
     # Salta la prima riga (data estrazione), header sulla seconda
-    df = pd.read_csv(io.StringIO(text), sep=";", skiprows=1, low_memory=False)
-    logger.info(f"  → {len(df)} righe scaricate")
+    df = pd.read_csv(
+        io.StringIO(text),
+        sep=sep,
+        skiprows=1,
+        low_memory=False,
+        on_bad_lines="skip",  # se MIMIT ha righe corrotte le ignora invece di crashare
+    )
+    logger.info(f"  → {len(df)} righe scaricate, {len(df.columns)} colonne")
     return df
 
 
