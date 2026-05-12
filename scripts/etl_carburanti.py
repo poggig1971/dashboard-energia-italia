@@ -176,10 +176,25 @@ def get_settimana_iso(data: datetime = None) -> str:
     lunedi = data - timedelta(days=data.weekday())
     return lunedi.strftime("%Y-%m-%d")
 
-
+def carica_nomi_province(spreadsheet) -> dict:
+    """
+    Carica il mapping sigla → nome esteso dal tab anagrafica_province.
+    Se l'anagrafica non esiste ancora, ritorna un dict vuoto.
+    """
+    try:
+        ws = spreadsheet.worksheet("anagrafica_province")
+        records = ws.get_all_records()
+        mapping = {r["sigla"]: r["nome"] for r in records if r.get("sigla")}
+        logger.info(f"Caricati {len(mapping)} nomi province dall'anagrafica")
+        return mapping
+    except Exception as e:
+        logger.warning(f"Anagrafica province non caricata: {e}")
+        return {}
+        
 def aggrega_prezzi_provinciali(
     df_prezzi: pd.DataFrame,
     df_anagrafica: pd.DataFrame,
+    nomi_province: dict = None,
 ) -> pd.DataFrame:
     """
     Esegue il join tra prezzi e anagrafica, filtra modalità self-service,
@@ -191,9 +206,28 @@ def aggrega_prezzi_provinciali(
     """
     logger.info("Avvio aggregazione provinciale")
 
-    # Normalizza i nomi colonna (MIMIT a volte cambia minuscole/maiuscole)
-    df_prezzi.columns = [c.strip().lower() for c in df_prezzi.columns]
-    df_anagrafica.columns = [c.strip().lower() for c in df_anagrafica.columns]
+    # Normalizza nome carburante (capitalize, trim)
+    df["carb_norm"] = df[col_carb].str.strip().str.title()
+
+    # DIAGNOSTICA: stampa i valori unici di carburante per capire la nomenclatura MIMIT
+    carb_uniq = df["carb_norm"].value_counts()
+    logger.info(f"Carburanti trovati nel file MIMIT (top 15):\n{carb_uniq.head(15)}")
+
+    # Mapping esteso per nomenclatura MIMIT (può includere varianti)
+    # Es. il "Metano" è spesso registrato come "Metano Auto", "GNC", "GNL", ecc.
+    CARBURANTI_VARIANTI = {
+        "Benzina": ["Benzina"],
+        "Gasolio": ["Gasolio"],
+        "GPL": ["Gpl", "GPL"],
+        "Metano": ["Metano", "Metano Auto", "Gnc", "GNC", "Gnl", "GNL", "L-Gnc"],
+    }
+    # Normalizza tutte le varianti verso il nome canonico
+    inverso = {v: k for k, varianti in CARBURANTI_VARIANTI.items() for v in varianti}
+    df["carb_norm"] = df["carb_norm"].map(lambda x: inverso.get(x, x))
+
+    # Mantieni solo i carburanti che ci interessano
+    df = df[df["carb_norm"].isin(CARBURANTI_MAP.keys())]
+    logger.info(f"Dopo filtro carburanti: {len(df)} righe")
 
     logger.info(f"Colonne prezzi: {list(df_prezzi.columns)}")
     logger.info(f"Colonne anagrafica: {list(df_anagrafica.columns)}")
@@ -269,7 +303,11 @@ def aggrega_prezzi_provinciali(
     out.rename(columns={"prov_sigla": "provincia_sigla"}, inplace=True)
 
     # Aggiungi colonne descrittive
-    out["provincia_nome"] = out["provincia_sigla"]  # In assenza di anagrafica nomi
+    # Aggiungi colonne descrittive
+    if nomi_province:
+        out["provincia_nome"] = out["provincia_sigla"].map(nomi_province).fillna(out["provincia_sigla"])
+    else:
+        out["provincia_nome"] = out["provincia_sigla"]
     out["regione"] = out["provincia_sigla"].map(SIGLE_PROVINCE_REGIONE)
     out["macro_area"] = out["regione"].map(REGIONE_TO_MACRO)
     out["n_impianti"] = out["provincia_sigla"].map(n_impianti_per_prov)
@@ -372,19 +410,21 @@ def main() -> None:
         df_prezzi = download_csv(URL_PREZZI, "prezzi MIMIT")
         df_anagrafica = download_csv(URL_ANAGRAFICA, "anagrafica MIMIT")
 
-        # 2. Aggrega
-        df_agg = aggrega_prezzi_provinciali(df_prezzi, df_anagrafica)
+        # 2. Connetti a Google Sheets (prima per leggere anagrafica)
+        client = get_gspread_client()
+        spreadsheet = open_master_sheet(client)
+
+        # 3. Carica i nomi estesi delle province dall'anagrafica
+        nomi_province = carica_nomi_province(spreadsheet)
+
+        # 4. Aggrega i prezzi
+        df_agg = aggrega_prezzi_provinciali(df_prezzi, df_anagrafica, nomi_province)
 
         if df_agg.empty:
             raise RuntimeError("Aggregazione vuota: nessun dato da scrivere")
 
-        # 3. Connetti a Google Sheets
-        client = get_gspread_client()
-        spreadsheet = open_master_sheet(client)
-
-        # 4. Scrivi i dati
-        record_caricati = upsert_settimana_corrente(spreadsheet, df_agg)
-        note = f"Settimana ISO: {df_agg['data_settimana'].iloc[0]} - {len(df_agg)} province aggiornate"
+        # 5. Scrivi i dati
+        record_caricati = upsert_settimana_corrente(spreadsheet, df_agg) 
 
     except Exception as e:
         logger.exception("Errore durante ETL Carburanti")
