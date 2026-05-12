@@ -206,6 +206,53 @@ def aggrega_prezzi_provinciali(
     """
     logger.info("Avvio aggregazione provinciale")
 
+    # Normalizza i nomi colonna (MIMIT a volte cambia minuscole/maiuscole)
+    df_prezzi.columns = [c.strip().lower() for c in df_prezzi.columns]
+    df_anagrafica.columns = [c.strip().lower() for c in df_anagrafica.columns]
+
+    logger.info(f"Colonne prezzi: {list(df_prezzi.columns)}")
+    logger.info(f"Colonne anagrafica: {list(df_anagrafica.columns)}")
+
+    # Identifica le colonne chiave (con fallback su varianti)
+    col_id_prezzi = next(c for c in df_prezzi.columns if "idimpianto" in c.replace("_", ""))
+    col_carb = next(
+        c for c in df_prezzi.columns
+        if "carburante" in c or "desccarburante" in c.replace("_", "")
+    )
+    col_prezzo = next(c for c in df_prezzi.columns if c == "prezzo")
+    col_self = next((c for c in df_prezzi.columns if "isself" in c.replace("_", "")), None)
+
+    col_id_anag = next(c for c in df_anagrafica.columns if "idimpianto" in c.replace("_", ""))
+    col_prov = next(c for c in df_anagrafica.columns if "provincia" in c)
+
+    # Per i carburanti benzina/gasolio mantieni solo self-service
+    if col_self:
+        df_prezzi[col_self] = (
+            pd.to_numeric(df_prezzi[col_self], errors="coerce").fillna(0).astype(int)
+        )
+
+    # Filtra prezzi validi (numerici e > 0)
+    df_prezzi[col_prezzo] = pd.to_numeric(df_prezzi[col_prezzo], errors="coerce")
+    df_prezzi = df_prezzi[df_prezzi[col_prezzo] > 0]
+
+    # Join con anagrafica per ottenere la provincia
+    df = df_prezzi.merge(
+        df_anagrafica[[col_id_anag, col_prov]],
+        left_on=col_id_prezzi,
+        right_on=col_id_anag,
+        how="inner",
+    )
+    logger.info(f"Dopo merge con anagrafica: {len(df)} righe")
+
+    # Per benzina e gasolio, mantieni solo self-service
+    if col_self:
+        carb_norm_lower = df[col_carb].str.lower().fillna("")
+        mask_carb_self = (
+            carb_norm_lower.str.contains("benzina") | carb_norm_lower.str.contains("gasolio")
+        )
+        df = df[~mask_carb_self | (df[col_self] == 1)]
+        logger.info(f"Dopo filtro self-service per benzina/gasolio: {len(df)} righe")
+
     # Normalizza nome carburante (capitalize, trim)
     df["carb_norm"] = df[col_carb].str.strip().str.title()
 
@@ -221,7 +268,6 @@ def aggrega_prezzi_provinciali(
         "GPL": ["Gpl", "GPL"],
         "Metano": ["Metano", "Metano Auto", "Gnc", "GNC", "Gnl", "GNL", "L-Gnc"],
     }
-    # Normalizza tutte le varianti verso il nome canonico
     inverso = {v: k for k, varianti in CARBURANTI_VARIANTI.items() for v in varianti}
     df["carb_norm"] = df["carb_norm"].map(lambda x: inverso.get(x, x))
 
@@ -229,51 +275,7 @@ def aggrega_prezzi_provinciali(
     df = df[df["carb_norm"].isin(CARBURANTI_MAP.keys())]
     logger.info(f"Dopo filtro carburanti: {len(df)} righe")
 
-    logger.info(f"Colonne prezzi: {list(df_prezzi.columns)}")
-    logger.info(f"Colonne anagrafica: {list(df_anagrafica.columns)}")
-
-    # Identifica le colonne chiave (con fallback su varianti)
-    col_id_prezzi = next(c for c in df_prezzi.columns if "idimpianto" in c.replace("_", ""))
-    col_carb = next(c for c in df_prezzi.columns if "carburante" in c or "descrizionecarburante" in c.replace("_", ""))
-    col_prezzo = next(c for c in df_prezzi.columns if c == "prezzo")
-    col_self = next((c for c in df_prezzi.columns if "isself" in c.replace("_", "")), None)
-
-    col_id_anag = next(c for c in df_anagrafica.columns if "idimpianto" in c.replace("_", ""))
-    col_prov = next(c for c in df_anagrafica.columns if "provincia" in c)
-
-    # Per i carburanti benzina/gasolio mantieni solo self-service
-    if col_self:
-        # MIMIT: isSelf = 1 (vero), 0 (servito). Conserva entrambi: filtreremo dopo.
-        df_prezzi[col_self] = pd.to_numeric(df_prezzi[col_self], errors="coerce").fillna(0).astype(int)
-
-    # Filtra prezzi validi
-    df_prezzi[col_prezzo] = pd.to_numeric(df_prezzi[col_prezzo], errors="coerce")
-    df_prezzi = df_prezzi[df_prezzi[col_prezzo] > 0]
-
-    # Join con anagrafica per ottenere la provincia
-    df = df_prezzi.merge(
-        df_anagrafica[[col_id_anag, col_prov]],
-        left_on=col_id_prezzi,
-        right_on=col_id_anag,
-        how="inner",
-    )
-    logger.info(f"Dopo merge con anagrafica: {len(df)} righe")
-
-    # Per benzina e gasolio, mantieni solo self-service
-    if col_self:
-        carb_norm = df[col_carb].str.lower().fillna("")
-        mask_carb_self = carb_norm.str.contains("benzina") | carb_norm.str.contains("gasolio")
-        df = df[~mask_carb_self | (df[col_self] == 1)]
-        logger.info(f"Dopo filtro self-service per benzina/gasolio: {len(df)} righe")
-
-    # Normalizza nome carburante (capitalize, trim)
-    df["carb_norm"] = df[col_carb].str.strip().str.title()
-
-    # Mantieni solo i carburanti che ci interessano
-    df = df[df["carb_norm"].isin(CARBURANTI_MAP.keys())]
-    logger.info(f"Dopo filtro carburanti: {len(df)} righe")
-
-    # Normalizza sigla provincia (uppercase)
+    # Normalizza sigla provincia (uppercase, trim)
     df["prov_sigla"] = df[col_prov].astype(str).str.strip().str.upper()
 
     # Tieni solo sigle valide
@@ -295,7 +297,7 @@ def aggrega_prezzi_provinciali(
     # Rinomina colonne usando il mapping
     pivot_prezzo.rename(columns=CARBURANTI_MAP, inplace=True)
 
-    # Conteggio impianti totale (somma su tutti i carburanti, prendi il max - più robusto)
+    # Conteggio impianti per provincia (prendi il max sui carburanti)
     n_impianti_per_prov = pivot_count.max(axis=1).fillna(0).astype(int)
 
     # Costruzione DataFrame finale
@@ -303,11 +305,13 @@ def aggrega_prezzi_provinciali(
     out.rename(columns={"prov_sigla": "provincia_sigla"}, inplace=True)
 
     # Aggiungi colonne descrittive
-    # Aggiungi colonne descrittive
     if nomi_province:
-        out["provincia_nome"] = out["provincia_sigla"].map(nomi_province).fillna(out["provincia_sigla"])
+        out["provincia_nome"] = (
+            out["provincia_sigla"].map(nomi_province).fillna(out["provincia_sigla"])
+        )
     else:
         out["provincia_nome"] = out["provincia_sigla"]
+
     out["regione"] = out["provincia_sigla"].map(SIGLE_PROVINCE_REGIONE)
     out["macro_area"] = out["regione"].map(REGIONE_TO_MACRO)
     out["n_impianti"] = out["provincia_sigla"].map(n_impianti_per_prov)
@@ -333,7 +337,6 @@ def aggrega_prezzi_provinciali(
 
     logger.info(f"Aggregazione completata: {len(out)} province")
     return out
-
 
 # ─── SCRITTURA SU GOOGLE SHEETS ────────────────────────────────────────────────
 
