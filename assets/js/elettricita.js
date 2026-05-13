@@ -4,16 +4,19 @@
  * Visualizza i prezzi del servizio di tutela elettricità ARERA per il
  * consumatore domestico tipo (3 kW · 2.700 kWh/anno).
  *
+ * v1.1 (2026-05-13): aggiunti disclaimer inline e note metodologiche
+ *                    in fondo, per chiarire l'applicabilità del dato
+ *                    a utenze domestiche (non imprese).
+ *
  * Layout:
  * - KPI principale: prezzo finale totale ultimo trimestre disponibile
+ * - Disclaimer alert: chiarimento applicabilità dato
  * - 4 KPI secondari: scomposizione (materia, trasporto, oneri, imposte) + %
  * - Grafico storico D3: andamento totale 2004 → corrente
+ * - Note metodologiche espandibili: come leggere il dato
  *
  * Sorgente dati: tab `prezzi_finali_arera` del Google Sheet master
  * Filtro: tipo_dato = "elettricita_tutela_2700"
- *
- * Pattern: stessa architettura di PrezziCorrentiTab (init lazy, export
- * su window.ElettricitaTab).
  */
 
 const ElettricitaTab = (function () {
@@ -143,6 +146,8 @@ const ElettricitaTab = (function () {
                 </div>
             </div>
 
+            ${renderDisclaimer()}
+
             <div class="elt-kpi-grid">
                 ${componenti.map(c => renderKpiComponente(c, totale)).join("")}
             </div>
@@ -173,6 +178,8 @@ const ElettricitaTab = (function () {
                 · Profilo: famiglia con 3 kW di potenza impegnata e 2.700 kWh di consumo annuo
                 · I prezzi sono espressi in c€/kWh ed includono tutte le componenti tariffarie.
             </div>
+
+            ${renderNoteMetodologiche()}
         `;
 
         container.innerHTML = html;
@@ -193,6 +200,107 @@ const ElettricitaTab = (function () {
                     ${pct !== null ? fmtIT(pct, 1) + "% del totale" : ""}
                 </div>
             </div>
+        `;
+    }
+
+    /**
+     * Disclaimer giallo inline visibile a colpo d'occhio.
+     */
+    function renderDisclaimer() {
+        return `
+            <div class="elt-disclaimer">
+                <div class="elt-disclaimer-icon">⚠</div>
+                <div class="elt-disclaimer-text">
+                    <strong>Il dato si riferisce al servizio di tutela domestica.</strong>
+                    Le utenze non domestiche (imprese in bassa o media tensione) sono soggette
+                    a componenti tariffarie diverse: oneri di sistema più elevati, accise più basse
+                    e IVA al 22%. Il valore qui riportato è un <em>indicatore di trend del mercato
+                    energetico nazionale</em>, non un riferimento di prezzo per le bollette aziendali.
+                    Vedere le <a href="#elt-note">note metodologiche</a> in fondo per dettagli.
+                </div>
+            </div>
+        `;
+    }
+
+    /**
+     * Note metodologiche espandibili (HTML5 details/summary, niente JS).
+     */
+    function renderNoteMetodologiche() {
+        return `
+            <details class="elt-note-method" id="elt-note">
+                <summary class="elt-note-method-title">
+                    Note metodologiche — come leggere correttamente questo dato
+                </summary>
+                <div class="elt-note-method-content">
+
+                    <h4>Cosa misura il dato ARERA</h4>
+                    <p>
+                        La serie pubblicata da ARERA descrive le condizioni economiche di fornitura
+                        del <strong>servizio di maggior tutela</strong> (oggi <em>servizio a tutele
+                        graduali</em>) per il <strong>consumatore domestico tipo</strong>, definito
+                        come famiglia residente con potenza impegnata di 3 kW e consumo annuo di
+                        2.700 kWh. Il prezzo è espresso in centesimi di euro per chilowattora
+                        (c€/kWh) e si articola in quattro componenti:
+                    </p>
+                    <ul>
+                        <li><strong>Materia energia</strong> (PE + PD + PCV + PPE): costo della
+                            commodity in borsa elettrica, dispacciamento e commercializzazione.</li>
+                        <li><strong>Trasporto e gestione contatore</strong>: corrispettivi di
+                            distribuzione e misura.</li>
+                        <li><strong>Oneri di sistema</strong> (ASOS + ARIM): incentivi alle
+                            rinnovabili e oneri generali.</li>
+                        <li><strong>Imposte</strong>: accisa erariale e IVA.</li>
+                    </ul>
+
+                    <h4>Perché le bollette delle imprese non corrispondono a questo prezzo</h4>
+                    <p>
+                        Le utenze non domestiche (commerciali, artigianali, industriali) pagano
+                        un mix di componenti strutturalmente differente:
+                    </p>
+                    <ul>
+                        <li><strong>Mercato libero</strong> nella quasi totalità dei casi (oppure
+                            servizio a tutele graduali per microimprese a partire dal 2024), con
+                            offerte personalizzate spesso indicizzate al PUN.</li>
+                        <li><strong>Oneri di sistema più elevati</strong>: la componente ASOS,
+                            che finanzia gli incentivi alle rinnovabili, ha aliquote crescenti
+                            in funzione della potenza impegnata e ricade maggiormente sulle
+                            utenze non domestiche.</li>
+                        <li><strong>Accise più basse</strong> rispetto al domestico oltre soglia,
+                            ma <strong>IVA al 22%</strong> anziché al 10%.</li>
+                        <li><strong>Componenti aggiuntive</strong>: penali per energia reattiva
+                            con basso cosφ, corrispettivi di capacità, costi di sbilanciamento,
+                            quote fisse di potenza impegnata.</li>
+                    </ul>
+
+                    <h4>Come va letto questo dato per chi gestisce un'impresa</h4>
+                    <p>
+                        Il valore ARERA è il miglior <strong>proxy di direzione del mercato
+                        elettrico nazionale</strong> liberamente disponibile. Quando il prezzo
+                        di tutela sale o scende, anche le offerte alle imprese si muovono nella
+                        stessa direzione e con proporzioni comparabili per la componente
+                        commodity (la materia energia ARERA è in pratica equivalente al PUN
+                        medio del trimestre più dispacciamento e perdite).
+                    </p>
+                    <p>
+                        Per il monitoraggio del <strong>prezzario delle opere pubbliche</strong>
+                        e per stimare l'andamento del costo dell'energia nei capitolati, questo
+                        dato è quindi un riferimento utile e affidabile. Per il <strong>confronto
+                        con una specifica bolletta aziendale</strong>, occorre invece esaminare
+                        la fattura nella sua composizione effettiva (PUN applicato, oneri,
+                        accise, IVA) e non utilizzare il valore di tutela come benchmark
+                        puntuale.
+                    </p>
+
+                    <h4>Sviluppi futuri della dashboard</h4>
+                    <p>
+                        Sono in valutazione l'integrazione del <strong>PUN borsa elettrica</strong>
+                        (dato pubblico ENTSO-E) e di un <strong>indicatore stimato per impresa MT</strong>
+                        a partire dai prezzi di riferimento ARERA per non domestico (PFOR), per offrire
+                        agli associati strumenti più aderenti alle proprie condizioni tariffarie.
+                    </p>
+
+                </div>
+            </details>
         `;
     }
 
