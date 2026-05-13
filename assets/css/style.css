@@ -1640,3 +1640,421 @@ html, body {
     }
 }
 
+/* ========================================================================
+   TAB SERIE STORICA — Stili dedicati (additivi, prefisso .ss-)
+   Da appendere a style.css
+   ======================================================================== */
+
+/* Header */
+.ss-header {
+    margin-bottom: 20px;
+}
+
+.ss-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--color-text);
+    margin: 0 0 6px;
+}
+
+.ss-subtitle {
+    font-size: 13px;
+    color: var(--color-text-light);
+    margin: 0;
+    line-height: 1.6;
+}
+
+/* Controlli */
+.ss-controls {
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.ss-control-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+}
+
+.ss-control-label {
+    font-weight: 600;
+    color: var(--color-text);
+    font-size: 13px;
+}
+
+.ss-control-hint {
+    font-size: 11px;
+    color: var(--color-text-light);
+    font-style: italic;
+}
+
+.ss-radio-group {
+    display: flex;
+    background: var(--color-bg-alt);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: 2px;
+    flex-wrap: wrap;
+}
+
+.ss-radio-label {
+    padding: 6px 14px;
+    font-size: 13px;
+    color: var(--color-text-light);
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.15s;
+    user-select: none;
+}
+
+.ss-radio-label input[type="radio"] {
+    display: none;
+}
+
+.ss-radio-label:has(input:checked) {
+    background: var(--color-primary);
+    color: white;
+    font-weight: 500;
+}
+
+.ss-radio-label:hover:not(:has(input:checked)) {
+    background: rgba(30, 58, 138, 0.08);
+}
+
+.ss-custom-dates {
+    padding: 8px 12px;
+    background: var(--color-bg-alt);
+    border-radius: var(--radius);
+}
+
+.ss-custom-dates input[type="number"] {
+    padding: 6px 10px;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 13px;
+}
+
+/* Status bar */
+.ss-status-bar {
+    margin-bottom: 16px;
+}
+
+.ss-status {
+    padding: 10px 14px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    border-left: 4px solid;
+}
+
+.ss-status-info {
+    background: #eff6ff;
+    border-left-color: var(--color-primary);
+    color: #1e3a8a;
+}
+
+.ss-status-warning {
+    background: #fef9e7;
+    border-left-color: #f59e0b;
+    color: #78350f;
+}
+
+.ss-status-ok {
+    background: #f0fdf4;
+    border-left-color: var(--color-success);
+    color: #166534;
+}
+
+/* Grafico */
+.ss-chart-container {
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin-bottom: 20px;
+}
+
+.ss-chart-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-text);
+    margin: 0 0 4px;
+}
+
+.ss-chart-subtitle {
+    font-size: 12px;
+    color: var(--color-text-light);
+    margin: 0 0 16px;
+    line-height: 1.5;
+}
+
+#ss-chart-svg-container {
+    width: 100%;
+    min-height: 420px;
+}
+
+.ss-chart-svg {
+    overflow: visible;
+}
+
+.ss-axis path,
+.ss-axis line {
+    stroke: var(--color-border);
+}
+
+.ss-axis text {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    fill: var(--color-text-light);
+}
+
+.ss-axis-label {
+    font-family: var(--font-sans);
+    font-size: 11px;
+    fill: var(--color-text-light);
+}
+
+.ss-line {
+    fill: none;
+}
+
+.ss-line-primary {
+    /* spessore già impostato inline da JS */
+}
+
+.ss-current-dot {
+    /* fill e stroke impostati inline */
+}
+
+.ss-current-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.ss-event-line {
+    /* attributi impostati inline */
+}
+
+.ss-event-label {
+    font-family: var(--font-sans);
+    font-size: 10px;
+    font-weight: 500;
+}
+
+.ss-chart-hover-dot {
+    /* trasparente, solo per hover */
+}
+
+.ss-empty-chart {
+    text-align: center;
+    padding: 80px 24px;
+    color: var(--color-text-light);
+}
+
+.ss-empty-chart p {
+    margin: 0 0 8px;
+    font-size: 15px;
+    font-weight: 500;
+}
+
+.ss-empty-chart-note {
+    font-size: 12px;
+    color: var(--color-text-light);
+    font-style: italic;
+    max-width: 480px;
+    margin: 8px auto 0 !important;
+    line-height: 1.6;
+}
+
+/* Legenda */
+.ss-chart-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--color-border);
+    font-size: 12px;
+    color: var(--color-text);
+}
+
+.ss-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.ss-legend-line {
+    display: inline-block;
+    width: 18px;
+    height: 3px;
+    border-radius: 2px;
+}
+
+/* Tooltip */
+.ss-tooltip {
+    position: absolute;
+    background: rgba(31, 41, 55, 0.95);
+    color: white;
+    padding: 10px 14px;
+    border-radius: 4px;
+    font-size: 12px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.12s;
+    z-index: 1000;
+    min-width: 220px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.ss-tt-title {
+    font-weight: 600;
+    margin-bottom: 6px;
+    font-size: 13px;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+    padding-bottom: 4px;
+}
+
+.ss-tt-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 3px 0;
+}
+
+.ss-tt-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.ss-tt-label {
+    color: #d1d5db;
+    flex: 1;
+}
+
+.ss-tt-value {
+    font-family: var(--font-mono);
+    font-weight: 600;
+}
+
+/* Tabella esportabile */
+.ss-table-container {
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin-bottom: 16px;
+}
+
+.ss-table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.ss-table-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-text);
+    margin: 0;
+}
+
+.ss-btn-export {
+    background: var(--color-primary);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-family: inherit;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.ss-btn-export:hover {
+    background: var(--color-primary-hover);
+}
+
+.ss-table-info {
+    font-size: 11px;
+    color: var(--color-text-light);
+    margin: 0 0 8px;
+    font-style: italic;
+}
+
+.ss-table-empty {
+    color: var(--color-text-light);
+    font-style: italic;
+    padding: 20px 0;
+    text-align: center;
+}
+
+.ss-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+.ss-table th,
+.ss-table td {
+    text-align: left;
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--color-bg-alt);
+}
+
+.ss-table th {
+    color: var(--color-text-light);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    background: var(--color-bg-alt);
+    position: sticky;
+    top: 0;
+}
+
+.ss-table td.num,
+.ss-table th.num {
+    text-align: right;
+    font-family: var(--font-mono);
+}
+
+.ss-table tr:hover {
+    background: var(--color-bg-alt);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .ss-control-group {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+@media (max-width: 640px) {
+    .ss-radio-group {
+        flex-direction: column;
+        width: 100%;
+    }
+    .ss-radio-label {
+        width: 100%;
+        text-align: center;
+    }
+    .ss-table {
+        font-size: 11px;
+    }
+}
