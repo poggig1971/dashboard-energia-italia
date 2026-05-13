@@ -1175,5 +1175,468 @@ html, body {
     }
 }
 
+/* ========================================================================
+   TAB VARIAZIONI % — Stili dedicati (additivi, prefisso .var-)
+   Da appendere a style.css
+   ======================================================================== */
 
+/* Header sezione */
+.var-header {
+    margin-bottom: 20px;
+}
+
+.var-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--color-text);
+    margin: 0 0 6px;
+}
+
+.var-subtitle {
+    font-size: 13px;
+    color: var(--color-text-light);
+    margin: 0;
+}
+
+/* Controlli */
+.var-controls {
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.var-control-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+}
+
+.var-control-label {
+    font-weight: 600;
+    color: var(--color-text);
+    font-size: 13px;
+}
+
+.var-radio-group {
+    display: flex;
+    background: var(--color-bg-alt);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: 2px;
+    flex-wrap: wrap;
+}
+
+.var-radio-label {
+    padding: 6px 14px;
+    font-size: 13px;
+    color: var(--color-text-light);
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.15s;
+    user-select: none;
+    position: relative;
+}
+
+.var-radio-label input[type="radio"] {
+    display: none;
+}
+
+.var-radio-label:has(input:checked) {
+    background: var(--color-primary);
+    color: white;
+    font-weight: 500;
+}
+
+.var-radio-label:hover:not(.disabled):not(:has(input:checked)) {
+    background: rgba(30, 58, 138, 0.08);
+}
+
+.var-radio-label.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.var-radio-label.disabled[data-tooltip]:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: -32px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(31, 41, 55, 0.95);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    white-space: nowrap;
+    z-index: 100;
+    font-weight: 400;
+}
+
+.var-custom-dates {
+    padding: 8px 12px;
+    background: var(--color-bg-alt);
+    border-radius: var(--radius);
+}
+
+.var-custom-dates input[type="date"] {
+    padding: 6px 10px;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 13px;
+}
+
+/* Status bar */
+.var-status-bar {
+    margin-bottom: 16px;
+}
+
+.var-status {
+    padding: 10px 14px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    border-left: 4px solid;
+}
+
+.var-status-info {
+    background: #eff6ff;
+    border-left-color: var(--color-primary);
+    color: #1e3a8a;
+}
+
+.var-status-warning {
+    background: #fef9e7;
+    border-left-color: #f59e0b;
+    color: #78350f;
+}
+
+.var-status-ok {
+    background: #f0fdf4;
+    border-left-color: var(--color-success);
+    color: #166534;
+}
+
+/* Sezione contenitore */
+.var-section {
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin-bottom: 20px;
+}
+
+.var-section-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-text);
+    margin: 0 0 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--color-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.var-section-source {
+    font-size: 11px;
+    color: var(--color-text-light);
+    font-weight: 400;
+    text-transform: none;
+}
+
+/* Period info */
+.var-period-info {
+    font-size: 13px;
+    color: var(--color-text-light);
+    margin-bottom: 16px;
+    padding: 8px 12px;
+    background: var(--color-bg-alt);
+    border-radius: var(--radius);
+}
+
+.var-period-info strong {
+    color: var(--color-text);
+    font-family: var(--font-mono);
+}
+
+.var-period-label {
+    font-style: italic;
+    margin-left: 8px;
+}
+
+/* Empty state */
+.var-empty {
+    padding: 40px 24px;
+    text-align: center;
+    background: var(--color-bg-alt);
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius);
+    color: var(--color-text-light);
+}
+
+.var-empty-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--color-text);
+    margin-bottom: 12px;
+}
+
+.var-empty-desc {
+    margin-bottom: 8px;
+    line-height: 1.6;
+}
+
+.var-empty-desc strong {
+    color: var(--color-primary);
+}
+
+/* KPI cards variazioni carburanti */
+.var-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.var-kpi-card {
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    border-left: 4px solid var(--color-border);
+}
+
+.var-kpi-card.var-trend-up {
+    border-left-color: var(--color-danger);
+}
+
+.var-kpi-card.var-trend-down {
+    border-left-color: var(--color-success);
+}
+
+.var-kpi-card.var-trend-neutral {
+    border-left-color: var(--color-text-light);
+}
+
+.var-kpi-card h4 {
+    margin: 0 0 8px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--color-text-light);
+    font-weight: 500;
+}
+
+.var-kpi-pct {
+    font-family: var(--font-mono);
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.1;
+    margin-bottom: 4px;
+}
+
+.var-kpi-value {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--color-text);
+    font-weight: 500;
+}
+
+.var-kpi-note {
+    font-size: 11px;
+    color: var(--color-text-light);
+    margin-top: 4px;
+}
+
+.var-kpi-empty {
+    font-family: var(--font-mono);
+    font-size: 22px;
+    color: var(--color-text-light);
+}
+
+/* Colori trend (anche per testo inline e celle tabella) */
+.var-trend-up {
+    color: var(--color-danger);
+}
+
+.var-trend-down {
+    color: var(--color-success);
+}
+
+.var-trend-neutral {
+    color: var(--color-text-light);
+}
+
+/* Classifica province */
+.var-classifica {
+    margin-top: 24px;
+}
+
+.var-classifica-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text);
+    margin: 0 0 12px;
+}
+
+.var-classifica-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.var-classifica-section {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0 0 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.var-classifica-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+.var-classifica-table th,
+.var-classifica-table td {
+    text-align: left;
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--color-bg-alt);
+}
+
+.var-classifica-table th {
+    color: var(--color-text-light);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    font-weight: 500;
+}
+
+.var-classifica-table td.num,
+.var-classifica-table th.num {
+    text-align: right;
+    font-family: var(--font-mono);
+}
+
+.var-classifica-table td.num.var-trend-up,
+.var-classifica-table td.num.var-trend-down {
+    font-weight: 600;
+}
+
+/* Sezione elettricità */
+.var-elt-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.var-elt-row {
+    display: grid;
+    grid-template-columns: 1.6fr 1.4fr 1.5fr 1.5fr;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: var(--radius);
+    background: var(--color-bg-alt);
+    font-size: 13px;
+}
+
+.var-elt-row-primary {
+    background: linear-gradient(135deg, rgba(30, 58, 138, 0.07), rgba(30, 58, 138, 0.02));
+    border-left: 3px solid var(--color-primary);
+    font-weight: 500;
+}
+
+.var-elt-row-primary .var-elt-value {
+    font-size: 16px;
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+.var-elt-label {
+    color: var(--color-text);
+}
+
+.var-elt-value {
+    font-family: var(--font-mono);
+    color: var(--color-text);
+}
+
+.var-elt-unit {
+    font-size: 11px;
+    color: var(--color-text-light);
+    font-weight: 400;
+}
+
+.var-elt-trend {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    line-height: 1.2;
+}
+
+.var-elt-trend-label {
+    font-size: 10px;
+    font-weight: 400;
+    color: var(--color-text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    font-family: var(--font-sans);
+}
+
+.var-elt-na {
+    color: var(--color-text-light);
+    font-family: var(--font-mono);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .var-kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .var-classifica-grid {
+        grid-template-columns: 1fr;
+    }
+    .var-elt-row {
+        grid-template-columns: 1.4fr 1fr 1fr 1fr;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 640px) {
+    .var-kpi-grid {
+        grid-template-columns: 1fr;
+    }
+    .var-elt-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+    }
+    .var-control-group {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .var-radio-group {
+        flex-direction: column;
+        width: 100%;
+    }
+    .var-radio-label {
+        width: 100%;
+        text-align: center;
+    }
+}
 
