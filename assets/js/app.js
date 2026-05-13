@@ -6,6 +6,7 @@
 
 let tabsLoaded = {
     "prezzi-correnti": false,
+    "elettricita": false,
     "variazioni": false,
     "spesa-stimata": false,
     "serie-storica": false,
@@ -54,6 +55,12 @@ function loadTab(tabName) {
         case "prezzi-correnti":
             if (window.PrezziCorrentiTab) {
                 PrezziCorrentiTab.init();
+                tabsLoaded[tabName] = true;
+            }
+            break;
+        case "elettricita":
+            if (window.ElettricitaTab) {
+                ElettricitaTab.init();
                 tabsLoaded[tabName] = true;
             }
             break;
