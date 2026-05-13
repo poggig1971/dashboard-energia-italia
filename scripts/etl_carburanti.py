@@ -11,6 +11,10 @@ Frequenza pubblicazione: quotidiana
 Output:
 - Tab `prezzi_carburanti_provinciale` del Google Sheet master
 - Tab `metadati_aggiornamento` con log esecuzione
+
+FIX (v2): scrittura su Sheets con value_input_option=RAW e numeri formattati
+con virgola decimale (formato italiano) per evitare interpretazione "data"
+da parte di Google Sheets localizzato in italiano (es. 1.6512 -> "165.12.00").
 """
 
 import io
@@ -95,6 +99,39 @@ CARBURANTI_VARIANTI = {
     "GPL": ["Gpl", "GPL"],
     "Metano": ["Metano", "Metano Auto", "Gnc", "GNC", "Gnl", "GNL", "L-Gnc"],
 }
+
+# Colonne che contengono valori numerici da formattare con virgola italiana
+COLONNE_NUMERICHE = [
+    "benzina_self_eur_l",
+    "gasolio_self_eur_l",
+    "gpl_eur_l",
+    "metano_eur_kg",
+]
+
+
+# UTILITY FORMATO NUMERICO
+
+def fmt_num_it(v):
+    """
+    Converte un numero in stringa con virgola decimale (formato italiano).
+    Restituisce "" se valore mancante.
+    Es: 1.8523 -> "1,8523"
+        2.0  -> "2"
+        None -> ""
+
+    Necessario per evitare che Google Sheets in localizzazione italiana
+    interpreti "1.8523" come una data e lo trasformi in "185.23.00".
+    """
+    if v is None:
+        return ""
+    try:
+        if pd.isna(v):
+            return ""
+    except (TypeError, ValueError):
+        pass
+    if isinstance(v, (int, float)):
+        return f"{round(float(v), 4):.4f}".replace(".", ",").rstrip("0").rstrip(",")
+    return str(v)
 
 
 # DOWNLOAD
@@ -289,8 +326,9 @@ def aggrega_prezzi_provinciali(
             out[c] = None
     out = out[schema_cols]
 
-    # Arrotonda prezzi a 4 decimali
-    for c in ["benzina_self_eur_l", "gasolio_self_eur_l", "gpl_eur_l", "metano_eur_kg"]:
+    # Arrotonda prezzi a 4 decimali (manteniamo numerico nel DataFrame,
+    # la conversione a stringa italiana avviene in upsert_settimana_corrente)
+    for c in COLONNE_NUMERICHE:
         out[c] = pd.to_numeric(out[c], errors="coerce").round(4)
 
     out = out.sort_values(["regione", "provincia_sigla"]).reset_index(drop=True)
@@ -308,6 +346,45 @@ HEADERS_CARBURANTI = [
 ]
 
 
+def dataframe_to_rows_italian(df: pd.DataFrame) -> list:
+    """
+    Converte un DataFrame in lista di liste pronta per Sheets,
+    applicando fmt_num_it() alle colonne numeriche dei prezzi.
+    n_impianti resta intero (non e' un prezzo, non genera bug data).
+    Le colonne testuali restano stringhe.
+    """
+    righe = []
+    for _, r in df.iterrows():
+        riga = []
+        for col in HEADERS_CARBURANTI:
+            v = r[col]
+            if col in COLONNE_NUMERICHE:
+                riga.append(fmt_num_it(v))
+            elif col == "n_impianti":
+                # Intero, niente decimali
+                try:
+                    if pd.isna(v):
+                        riga.append("")
+                    else:
+                        riga.append(str(int(v)))
+                except (TypeError, ValueError):
+                    riga.append(str(v) if v is not None else "")
+            else:
+                # Stringhe (data, provincia, regione, macro_area)
+                if v is None:
+                    riga.append("")
+                else:
+                    try:
+                        if pd.isna(v):
+                            riga.append("")
+                        else:
+                            riga.append(str(v))
+                    except (TypeError, ValueError):
+                        riga.append(str(v))
+        righe.append(riga)
+    return righe
+
+
 def upsert_settimana_corrente(spreadsheet, df: pd.DataFrame) -> int:
     """
     Aggiorna o inserisce le righe della settimana corrente nel tab.
@@ -318,6 +395,9 @@ def upsert_settimana_corrente(spreadsheet, df: pd.DataFrame) -> int:
     2. Filtriamo via le righe della settimana corrente (in memoria)
     3. Aggiungiamo le righe nuove
     4. Sovrascriviamo tutto il tab in UN'UNICA operazione bulk
+
+    FIX (v2): numeri convertiti in stringhe italiane via fmt_num_it()
+    e scritti con value_input_option="RAW" per evitare reinterpretazione.
     """
     worksheet = get_or_create_worksheet(
         spreadsheet,
@@ -329,14 +409,17 @@ def upsert_settimana_corrente(spreadsheet, df: pd.DataFrame) -> int:
     all_values = worksheet.get_all_values()
     settimana = df["data_settimana"].iloc[0]
 
+    # Prepara le nuove righe con formato italiano
+    nuove_righe = dataframe_to_rows_italian(df)
+
     # Caso foglio vuoto: scrivi header + tutti i dati
     if len(all_values) <= 1:
-        rows_to_write = [HEADERS_CARBURANTI] + df.fillna("").astype(str).values.tolist()
+        rows_to_write = [HEADERS_CARBURANTI] + nuove_righe
         worksheet.clear()
         worksheet.update(
             values=rows_to_write,
             range_name="A1",
-            value_input_option="USER_ENTERED",
+            value_input_option="RAW",
         )
         logger.info(f"Foglio vuoto: scritte {len(rows_to_write) - 1} righe")
         return len(df)
@@ -354,18 +437,16 @@ def upsert_settimana_corrente(spreadsheet, df: pd.DataFrame) -> int:
     if n_rimosse > 0:
         logger.info(f"Rimosse {n_rimosse} righe vecchie per settimana {settimana}")
 
-    # Aggiungi le nuove righe della settimana corrente
-    nuove_righe = df.fillna("").astype(str).values.tolist()
-
     # Costruisci il contenuto totale: header + righe vecchie + righe nuove
     contenuto_completo = [HEADERS_CARBURANTI] + righe_da_mantenere + nuove_righe
 
     # UN'UNICA operazione bulk: clear + update
+    # FIX: value_input_option="RAW" invece di "USER_ENTERED"
     worksheet.clear()
     worksheet.update(
         values=contenuto_completo,
         range_name="A1",
-        value_input_option="USER_ENTERED",
+        value_input_option="RAW",
     )
     logger.info(
         f"Scritte {len(nuove_righe)} righe nuove per settimana {settimana} "
@@ -409,6 +490,12 @@ def main() -> None:
         record_caricati = upsert_settimana_corrente(spreadsheet, df_agg)
         note = f"Settimana ISO: {df_agg['data_settimana'].iloc[0]} - {len(df_agg)} province aggiornate"
 
+        # Verifica visiva nei log: prime 3 righe formattate
+        logger.info("Verifica formato (prime 3 province):")
+        sample_rows = dataframe_to_rows_italian(df_agg.head(3))
+        for i, row in enumerate(sample_rows):
+            logger.info(f"  {i+1}. {row}")
+
     except Exception as e:
         logger.exception("Errore durante ETL Carburanti")
         esito = "errore"
@@ -445,3 +532,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
