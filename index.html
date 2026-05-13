@@ -42,6 +42,7 @@
 
     <nav class="tab-nav">
         <button class="tab-btn active" data-tab="prezzi-correnti">Prezzi correnti</button>
+        <button class="tab-btn" data-tab="elettricita">Elettricità</button>
         <button class="tab-btn" data-tab="variazioni">Variazioni %</button>
         <button class="tab-btn" data-tab="spesa-stimata">Spesa stimata</button>
         <button class="tab-btn" data-tab="serie-storica">Serie storica</button>
@@ -52,6 +53,10 @@
 
         <section id="tab-prezzi-correnti" class="tab-content active">
             <div class="loading">Caricamento dati in corso...</div>
+        </section>
+
+        <section id="tab-elettricita" class="tab-content">
+            <div class="loading">Caricamento dati ARERA...</div>
         </section>
 
         <section id="tab-variazioni" class="tab-content">
@@ -107,6 +112,7 @@
     <script src="assets/js/map.js"></script>
     <script src="assets/js/province-finder.js"></script>
     <script src="assets/js/prezzi-correnti.js"></script>
+    <script src="assets/js/elettricita.js"></script>
     <script src="assets/js/app.js"></script>
 </body>
 </html>
