@@ -1,5 +1,5 @@
 """
-ETL ARERA - Prezzi finali tutela elettricita (versione finale).
+ETL ARERA - Prezzi finali tutela elettricita (versione finale + fix numeri).
 
 Sorgente:
   https://www.arera.it/dati-e-statistiche/dettaglio/aggiornamenti-delle-condizioni-di-tutela-elettricita
@@ -16,7 +16,9 @@ Struttura file (verificata 12/05/2026):
   - Colonna 5: TOTALE c€/kWh
   - Dati partono da riga 5 (header alle righe 0-4)
 
-Output sul Google Sheet (tab "prezzi_finali_arera").
+FIX (v2): scrittura su Sheets con value_input_option=RAW e numeri formattati
+con virgola decimale (formato italiano) per evitare interpretazione "data"
+da parte di Google Sheets localizzato in italiano.
 """
 
 import io
@@ -63,6 +65,22 @@ TRIM_TO_MESE_INIZIO = {
 }
 
 
+def fmt_num_it(v):
+    """
+    Converte un numero in stringa con virgola decimale (formato italiano).
+    Restituisce "" se valore mancante.
+    Es: 25.21 -> "25,21"
+        15.13 -> "15,13"
+        None  -> ""
+    """
+    if v is None:
+        return ""
+    if isinstance(v, (int, float)) and not pd.isna(v):
+        # Arrotondato a 4 decimali, virgola come separatore decimale
+        return f"{round(float(v), 4):.4f}".replace(".", ",").rstrip("0").rstrip(",")
+    return ""
+
+
 def download_xlsx(url: str, label: str) -> bytes:
     logger.info(f"Download {label}: {url}")
     response = requests.get(url, timeout=60)
@@ -74,14 +92,6 @@ def download_xlsx(url: str, label: str) -> bytes:
 def parse_periodo(periodo_str):
     """
     Estrae trimestre e anno da una stringa periodo ARERA.
-
-    Casi gestiti:
-      "I \\n2004"  -> ("I", 2004)
-      "I 2004"     -> ("I", 2004)
-      "II 2021"    -> ("II", 2021)
-      "III 2007"   -> ("III", 2007)
-      "II **"      -> ("II", None) - anno mancante, da inferire
-      "II"         -> ("II", None) - anno mancante, da inferire
     """
     if not isinstance(periodo_str, str):
         return None, None
@@ -89,12 +99,10 @@ def parse_periodo(periodo_str):
     clean = re.sub(r"[\n\r]+", " ", periodo_str).strip()
     clean = re.sub(r"\s+", " ", clean)
 
-    # Pattern 1: trimestre + anno
     match = re.match(r"^(IV|III|II|I)\s+(\d{4})", clean)
     if match:
         return match.group(1), int(match.group(2))
 
-    # Pattern 2: solo trimestre
     match2 = re.match(r"^(IV|III|II|I)(\s+\*+)?$", clean)
     if match2:
         return match2.group(1), None
@@ -191,25 +199,28 @@ def main():
         if not tutti_record:
             raise RuntimeError("Nessun record estratto dai fogli ARERA")
 
+        # Ordina record per tipo_dato, anno_mese
+        tutti_record.sort(key=lambda r: (r["tipo_dato"], r["anno_mese"]))
+
         timestamp = datetime.utcnow().isoformat(timespec="seconds")
+
+        # FIX: tutti i numeri in stringhe con virgola decimale italiana,
+        # così Google Sheets non li interpreta come date.
         righe = []
         for r in tutti_record:
             righe.append([
-                r["anno_mese"],
-                r["tipo_dato"],
-                r["periodo"],
-                r["valore"],
-                r["materia_energia"] if r["materia_energia"] is not None else "",
-                r["trasporto"] if r["trasporto"] is not None else "",
-                r["oneri_sistema"] if r["oneri_sistema"] is not None else "",
-                r["imposte"] if r["imposte"] is not None else "",
+                r["anno_mese"],                  # testo "YYYY-MM"
+                r["tipo_dato"],                  # testo
+                r["periodo"],                    # testo
+                fmt_num_it(r["valore"]),         # numero -> stringa "25,21"
+                fmt_num_it(r["materia_energia"]),
+                fmt_num_it(r["trasporto"]),
+                fmt_num_it(r["oneri_sistema"]),
+                fmt_num_it(r["imposte"]),
                 "c€/kWh",
                 URL_TUTELA_ELETTRICITA,
                 timestamp,
             ])
-
-        df = pd.DataFrame(righe, columns=HEADERS_ARERA)
-        df = df.sort_values(["tipo_dato", "anno_mese"]).reset_index(drop=True)
 
         worksheet = get_or_create_worksheet(
             spreadsheet,
@@ -218,23 +229,29 @@ def main():
             rows=2000,
         )
 
-        contenuto = [HEADERS_ARERA] + df.astype(str).values.tolist()
+        contenuto = [HEADERS_ARERA] + righe
+
         worksheet.clear()
+        # FIX: USE RAW (non USER_ENTERED) per evitare che Sheets reinterpreti.
+        # Le celle conterranno esattamente le stringhe che inviamo.
         worksheet.update(
             values=contenuto,
             range_name="A1",
-            value_input_option="USER_ENTERED",
+            value_input_option="RAW",
         )
 
-        record_caricati = len(df)
+        record_caricati = len(righe)
         logger.info(f"Scritti {record_caricati} record nel tab prezzi_finali_arera")
         logger.info(f"  - tabella 2700: {len(record_2700)} record")
         logger.info(f"  - tabella 2000: {len(record_2000)} record")
         note = f"2700kWh: {len(record_2700)} record. 2000kWh: {len(record_2000)} record."
 
         logger.info(f"\nUltimi 5 record (verifica):")
-        for _, r in df.tail(5).iterrows():
-            logger.info(f"  {r['periodo']} ({r['tipo_dato']}): {r['valore']} c€/kWh")
+        for r in tutti_record[-5:]:
+            logger.info(
+                f"  {r['periodo']} ({r['tipo_dato']}): "
+                f"{fmt_num_it(r['valore'])} c€/kWh"
+            )
 
     except Exception as e:
         logger.exception("Errore durante ETL ARERA")
