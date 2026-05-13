@@ -2,6 +2,8 @@
  * App principale Dashboard Energia Italia
  *
  * Orchestra navigazione tab, caricamento dati, bootstrap iniziale.
+ *
+ * v1.2 (2026-05-13): aggiunto routing per tab Variazioni %.
  */
 
 let tabsLoaded = {
@@ -61,6 +63,12 @@ function loadTab(tabName) {
         case "elettricita":
             if (window.ElettricitaTab) {
                 ElettricitaTab.init();
+                tabsLoaded[tabName] = true;
+            }
+            break;
+        case "variazioni":
+            if (window.VariazioniTab) {
+                VariazioniTab.init();
                 tabsLoaded[tabName] = true;
             }
             break;
