@@ -3,14 +3,14 @@
  *
  * Orchestra navigazione tab, caricamento dati, bootstrap iniziale.
  *
- * v1.2 (2026-05-13): aggiunto routing per tab Variazioni %.
+ * v1.3 (2026-05-13): aggiunto routing per tab Serie storica (Fase 6).
+ *                    Rimossa tab "Spesa stimata".
  */
 
 let tabsLoaded = {
     "prezzi-correnti": false,
     "elettricita": false,
     "variazioni": false,
-    "spesa-stimata": false,
     "serie-storica": false,
     "metodologia": false,
 };
@@ -72,7 +72,12 @@ function loadTab(tabName) {
                 tabsLoaded[tabName] = true;
             }
             break;
-        // Altre tab in fasi successive
+        case "serie-storica":
+            if (window.SerieStoricaTab) {
+                SerieStoricaTab.init();
+                tabsLoaded[tabName] = true;
+            }
+            break;
         default:
             console.log(`[App] Tab "${tabName}" non ancora implementata`);
     }
