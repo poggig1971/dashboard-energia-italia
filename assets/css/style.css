@@ -758,3 +758,273 @@ html, body {
     background: #16a34a;
     color: white;
 }
+
+/* ========================================================================
+   TAB ELETTRICITÀ — Stili dedicati (additivi, prefisso .elt-)
+   ======================================================================== */
+
+/* Header sezione */
+.elt-header {
+    margin-bottom: 20px;
+}
+
+.elt-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--color-text);
+    margin: 0 0 6px;
+}
+
+.elt-subtitle {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--color-text-light);
+}
+
+.elt-period {
+    font-size: 13px;
+    color: var(--color-text-light);
+    margin: 0;
+}
+
+.elt-period strong {
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+.elt-period-meta {
+    font-style: italic;
+}
+
+/* KPI principale (grande, in evidenza) */
+.elt-kpi-principal {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.elt-kpi-principal-card {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
+    color: white;
+    border-radius: var(--radius);
+    padding: 24px 36px;
+    text-align: center;
+    box-shadow: var(--shadow-md);
+    min-width: 280px;
+    max-width: 480px;
+}
+
+.elt-kpi-principal-label {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    opacity: 0.85;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.elt-kpi-principal-value {
+    font-family: var(--font-mono);
+    font-size: 44px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.elt-kpi-principal-unit {
+    font-size: 18px;
+    font-weight: 400;
+    opacity: 0.9;
+    margin-left: 6px;
+}
+
+.elt-kpi-principal-note {
+    font-size: 12px;
+    opacity: 0.85;
+    margin-top: 10px;
+    font-weight: 400;
+}
+
+/* Griglia 4 KPI componenti */
+.elt-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+}
+
+.elt-kpi-componente .kpi-value {
+    font-size: 24px;
+}
+
+/* Grafico storico */
+.elt-chart-container {
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin-bottom: 16px;
+}
+
+.elt-chart-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-text);
+    margin: 0 0 4px;
+}
+
+.elt-chart-subtitle {
+    font-size: 12px;
+    color: var(--color-text-light);
+    margin: 0 0 16px;
+}
+
+#elt-chart-svg-container {
+    width: 100%;
+    min-height: 360px;
+}
+
+.elt-chart-svg {
+    overflow: visible;
+}
+
+.elt-axis path,
+.elt-axis line {
+    stroke: var(--color-border);
+}
+
+.elt-axis text {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    fill: var(--color-text-light);
+}
+
+.elt-axis-label {
+    font-family: var(--font-sans);
+    font-size: 11px;
+    fill: var(--color-text-light);
+}
+
+.elt-chart-line {
+    fill: none;
+    stroke: var(--color-primary);
+    stroke-width: 2;
+}
+
+.elt-chart-area {
+    fill: var(--color-primary);
+    opacity: 0.12;
+}
+
+.elt-chart-peak-dot {
+    fill: var(--color-danger);
+    stroke: white;
+    stroke-width: 2;
+}
+
+.elt-chart-peak-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    fill: var(--color-danger);
+}
+
+.elt-chart-current-dot {
+    fill: var(--color-primary);
+    stroke: white;
+    stroke-width: 2;
+}
+
+.elt-chart-current-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    fill: var(--color-primary);
+}
+
+.elt-chart-hover-dot {
+    fill: transparent;
+    cursor: pointer;
+}
+
+.elt-chart-legend {
+    display: flex;
+    gap: 16px;
+    margin-top: 12px;
+    font-size: 12px;
+    color: var(--color-text-light);
+}
+
+.elt-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.elt-legend-line {
+    display: inline-block;
+    width: 18px;
+    height: 2px;
+    background: var(--color-primary);
+}
+
+/* Tooltip grafico */
+.elt-tooltip {
+    position: absolute;
+    background: rgba(31, 41, 55, 0.95);
+    color: white;
+    padding: 10px 14px;
+    border-radius: 4px;
+    font-size: 12px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.12s;
+    z-index: 1000;
+    min-width: 200px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.elt-tt-title {
+    font-weight: 600;
+    margin-bottom: 6px;
+    font-size: 13px;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+    padding-bottom: 4px;
+}
+
+.elt-tt-row {
+    display: flex;
+    justify-content: space-between;
+    margin: 3px 0;
+}
+
+.elt-tt-label {
+    color: #d1d5db;
+}
+
+.elt-tt-value {
+    font-family: var(--font-mono);
+    font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .elt-kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 640px) {
+    .elt-kpi-grid {
+        grid-template-columns: 1fr;
+    }
+    .elt-kpi-principal-card {
+        padding: 18px 24px;
+        min-width: 240px;
+    }
+    .elt-kpi-principal-value {
+        font-size: 34px;
+    }
+}
+
+
+
