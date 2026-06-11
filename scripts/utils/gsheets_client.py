@@ -96,7 +96,7 @@ def log_etl_run(
     """
     Aggiunge una riga di log nel tab `metadati_aggiornamento`.
     """
-    from datetime import datetime
+    from datetime import datetime, timezone
 
     headers = [
         "fonte",
@@ -109,6 +109,6 @@ def log_etl_run(
     ws = get_or_create_worksheet(
         spreadsheet, "metadati_aggiornamento", headers=headers
     )
-    timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
     ws.append_row([fonte, timestamp, record_caricati, esito, url_fonte, note])
     logger.info(f"Log ETL scritto: {fonte} | {esito} | {record_caricati} record")

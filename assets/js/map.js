@@ -13,8 +13,12 @@
  */
 
 const ItalyMap = (function () {
-    // URL del TopoJSON province italiane
-    const TOPOJSON_URL = "https://raw.githubusercontent.com/openpolis/geojson-italy/master/topojson/limits_IT_provinces.topo.json";
+    // TopoJSON province italiane: copia locale nel repo (fonte Openpolis,
+    // CC-BY 4.0), con fallback remoto se il file locale non fosse disponibile.
+    const TOPOJSON_URL = (typeof window !== "undefined" && window.CONFIG && window.CONFIG.TOPOJSON_PROVINCE)
+        ? window.CONFIG.TOPOJSON_PROVINCE
+        : "assets/data/italy-provinces.topojson";
+    const TOPOJSON_FALLBACK_URL = "https://raw.githubusercontent.com/openpolis/geojson-italy/master/topojson/limits_IT_provinces.topo.json";
 
     let svg = null;
     let g = null;
@@ -53,17 +57,24 @@ const ItalyMap = (function () {
 
         g = svg.append("g").attr("class", "map-provinces");
 
-        // Carica TopoJSON
+        // Carica TopoJSON (prima la copia locale, poi fallback remoto)
         try {
             console.log(`[ItalyMap] Caricamento TopoJSON da ${TOPOJSON_URL}`);
             topoData = await d3.json(TOPOJSON_URL);
-            console.log("[ItalyMap] TopoJSON caricato");
+            console.log("[ItalyMap] TopoJSON caricato (locale)");
             renderProvinces();
-        } catch (err) {
-            console.error("[ItalyMap] Errore caricamento TopoJSON:", err);
-            container.append("div")
-                .attr("class", "error-message")
-                .text("Impossibile caricare la mappa. Verificare connessione.");
+        } catch (errLocale) {
+            console.warn("[ItalyMap] TopoJSON locale non disponibile, provo fallback remoto:", errLocale);
+            try {
+                topoData = await d3.json(TOPOJSON_FALLBACK_URL);
+                console.log("[ItalyMap] TopoJSON caricato (fallback remoto)");
+                renderProvinces();
+            } catch (err) {
+                console.error("[ItalyMap] Errore caricamento TopoJSON:", err);
+                container.append("div")
+                    .attr("class", "error-message")
+                    .text("Impossibile caricare la mappa. Verificare connessione.");
+            }
         }
     }
 

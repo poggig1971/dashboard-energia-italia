@@ -19,7 +19,8 @@ da parte di Google Sheets localizzato in italiano (es. 1.6512 -> "165.12.00").
 
 import io
 import sys
-from datetime import datetime, timedelta
+import time
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pandas as pd
@@ -39,6 +40,22 @@ from utils.gsheets_client import (
 
 URL_ANAGRAFICA = "https://www.mimit.gov.it/images/exportCSV/anagrafica_impianti_attivi.csv"
 URL_PREZZI = "https://www.mimit.gov.it/images/exportCSV/prezzo_alle_8.csv"
+
+# Header HTTP "da browser": il server MIMIT a volte rifiuta o non risponde
+# alle richieste con User-Agent di default di python-requests (visto il
+# 10-11/06/2026: "Max retries exceeded" dai runner GitHub Actions).
+HTTP_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+    ),
+    "Accept": "text/csv,application/csv,text/plain,*/*",
+    "Accept-Language": "it-IT,it;q=0.9",
+}
+
+# Retry con backoff esponenziale: 4 tentativi, attese 20s / 40s / 80s
+MAX_TENTATIVI = 4
+ATTESA_BASE_SEC = 20
 
 SIGLE_PROVINCE_REGIONE = {
     "TO": "Piemonte", "VC": "Piemonte", "NO": "Piemonte", "CN": "Piemonte",
@@ -146,8 +163,26 @@ def download_csv(url: str, label: str) -> pd.DataFrame:
     3. Il separatore e' il pipe '|' (in passato era ';', auto-detect)
     """
     logger.info(f"Download {label}: {url}")
-    response = requests.get(url, timeout=60)
-    response.raise_for_status()
+    response = None
+    ultimo_errore = None
+    for tentativo in range(1, MAX_TENTATIVI + 1):
+        try:
+            response = requests.get(url, timeout=60, headers=HTTP_HEADERS)
+            response.raise_for_status()
+            break
+        except requests.RequestException as e:
+            ultimo_errore = e
+            logger.warning(
+                f"  Tentativo {tentativo}/{MAX_TENTATIVI} fallito per {label}: {e}"
+            )
+            if tentativo < MAX_TENTATIVI:
+                attesa = ATTESA_BASE_SEC * (2 ** (tentativo - 1))
+                logger.info(f"  Riprovo tra {attesa}s...")
+                time.sleep(attesa)
+    if response is None:
+        raise RuntimeError(
+            f"Download {label} fallito dopo {MAX_TENTATIVI} tentativi: {ultimo_errore}"
+        )
 
     try:
         text = response.content.decode("utf-8")
@@ -184,7 +219,7 @@ def download_csv(url: str, label: str) -> pd.DataFrame:
 def get_settimana_iso(data: datetime = None) -> str:
     """Restituisce la data del lunedi della settimana ISO in formato YYYY-MM-DD."""
     if data is None:
-        data = datetime.utcnow()
+        data = datetime.now(timezone.utc)
     lunedi = data - timedelta(days=data.weekday())
     return lunedi.strftime("%Y-%m-%d")
 

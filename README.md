@@ -8,25 +8,35 @@ Dashboard web pubblica per il monitoraggio dei prezzi e dei consumi energetici i
 **Storage dati:** Google Sheets (auto-popolato via GitHub Actions)
 
 ## Architettura
+
+```
+GitHub Actions (ETL Python, schedulati)
+        │  scrive via service account
+        ▼
+Google Sheets (foglio master "Dashboard_Energia_Italia_DATI")
+        │  letto come CSV via endpoint gviz
+        ▼
+Frontend statico su GitHub Pages (HTML + CSS + JS, D3.js per mappa e grafici)
+```
+
 ## Funzionalità
 
-- 5 tab analitici: Prezzi correnti, Variazioni %, Spesa stimata, Serie storica, Metodologia
-- Mappa choropleth provinciale interattiva (D3.js + TopoJSON ISTAT)
+- 5 tab analitici: Prezzi correnti, Elettricità, Variazioni %, Serie storica, Metodologia (in costruzione)
+- Mappa choropleth provinciale interattiva (D3.js + TopoJSON, copia locale nel repo con fallback remoto)
 - Selettore Nord / Centro / Sud+Isole
-- Serie storica dal 1 gennaio 2022 ad oggi
+- Serie storica ARERA dal 2004; carburanti in accumulo progressivo (settimanale, da maggio 2026)
 - Aggiornamento automatico con frequenze differenziate per fonte
-- Export PDF lato client (jsPDF + html2canvas)
 
 ## Fonti dati e frequenze
 
-| Fonte | Frequenza | Granularità |
-|---|---|---|
-| MIMIT (carburanti) | Quotidiana | Provinciale (impianti) |
-| MASE (carburanti) | Settimanale | Nazionale |
-| GME (PUN, PSV) | Giornaliera | Zonale / Nazionale |
-| Terna (consumi EE) | Annuale | Provinciale |
-| ARERA (prezzi finali) | Trimestrale | Nazionale |
-| Eurostat | Semestrale | Nazionale |
+| Fonte | Frequenza | Granularità | Stato ETL |
+|---|---|---|---|
+| MIMIT (carburanti) | Quotidiana | Provinciale (impianti) | ✅ Attivo (daily) |
+| ARERA (prezzi finali tutela) | Trimestrale | Nazionale | ✅ Attivo (mensile) |
+| MASE (carburanti) | Settimanale | Nazionale | 🔜 Pianificato |
+| GME (PUN, PSV) | Giornaliera | Zonale / Nazionale | 🔜 Pianificato |
+| Terna (consumi EE) | Annuale | Provinciale | 🔜 Pianificato |
+| Eurostat | Semestrale | Nazionale | 🔜 Pianificato |
 
 ## Principi metodologici
 
@@ -38,6 +48,7 @@ Dashboard web pubblica per il monitoraggio dei prezzi e dei consumi energetici i
 ## Licenza dati
 
 Elaborazione su dati pubblici. Licenza dati MIMIT: IODL 2.0. Per usi ufficiali consultare le fonti originali.
+Confini provinciali: [Openpolis / geojson-italy](https://github.com/openpolis/geojson-italy) (CC-BY 4.0, su dati ISTAT) — copia locale in `assets/data/italy-provinces.topojson`.
 
 ## Contatti
 
