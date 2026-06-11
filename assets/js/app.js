@@ -78,6 +78,12 @@ function loadTab(tabName) {
                 tabsLoaded[tabName] = true;
             }
             break;
+        case "metodologia":
+            if (window.MetodologiaTab) {
+                MetodologiaTab.init();
+                tabsLoaded[tabName] = true;
+            }
+            break;
         default:
             console.log(`[App] Tab "${tabName}" non ancora implementata`);
     }

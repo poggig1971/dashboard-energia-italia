@@ -2058,3 +2058,121 @@ html, body {
         font-size: 11px;
     }
 }
+
+
+/* ============================================================
+   TAB METODOLOGIA (v0.6.0)
+   ============================================================ */
+
+.met-wrapper {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 1.5rem 1rem 3rem;
+}
+
+.met-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-primary, #1e3a8a);
+    margin-bottom: 0.75rem;
+}
+
+.met-intro {
+    color: var(--color-text-secondary, #475569);
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+}
+
+.met-block {
+    background: #fff;
+    border: 1px solid var(--color-border, #e2e8f0);
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+    overflow: hidden;
+}
+
+.met-block summary {
+    cursor: pointer;
+    padding: 0.85rem 1rem;
+    font-weight: 600;
+    color: var(--color-primary, #1e3a8a);
+    background: #f8fafc;
+    user-select: none;
+}
+
+.met-block summary:hover {
+    background: #f1f5f9;
+}
+
+.met-block-body {
+    padding: 1rem 1.25rem;
+    line-height: 1.65;
+    color: var(--color-text, #1e293b);
+}
+
+.met-block-body ul {
+    padding-left: 1.25rem;
+    margin: 0.5rem 0;
+}
+
+.met-block-body li {
+    margin-bottom: 0.4rem;
+}
+
+.met-block-body code {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.85em;
+    background: #f1f5f9;
+    padding: 0.1rem 0.35rem;
+    border-radius: 4px;
+}
+
+.met-pre {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    background: #f8fafc;
+    border: 1px solid var(--color-border, #e2e8f0);
+    border-radius: 6px;
+    padding: 0.85rem 1rem;
+    overflow-x: auto;
+    margin: 0.75rem 0;
+}
+
+.met-note {
+    font-size: 0.85rem;
+    color: var(--color-text-secondary, #64748b);
+    font-style: italic;
+    margin-top: 0.5rem;
+}
+
+.met-table {
+    margin-top: 0.5rem;
+}
+
+.met-badge {
+    display: inline-block;
+    padding: 0.1rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.met-badge-ok {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.met-badge-err {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+@media (max-width: 640px) {
+    .met-wrapper {
+        padding: 1rem 0.5rem 2rem;
+    }
+    .met-block-body {
+        padding: 0.75rem;
+    }
+}

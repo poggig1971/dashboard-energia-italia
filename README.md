@@ -21,7 +21,7 @@ Frontend statico su GitHub Pages (HTML + CSS + JS, D3.js per mappa e grafici)
 
 ## Funzionalità
 
-- 5 tab analitici: Prezzi correnti, Elettricità, Variazioni %, Serie storica, Metodologia (in costruzione)
+- 5 tab analitici: Prezzi correnti, Elettricità, Variazioni %, Serie storica, Metodologia
 - Mappa choropleth provinciale interattiva (D3.js + TopoJSON, copia locale nel repo con fallback remoto)
 - Selettore Nord / Centro / Sud+Isole
 - Serie storica ARERA dal 2004; carburanti in accumulo progressivo (settimanale, da maggio 2026)
