@@ -18,6 +18,7 @@ da parte di Google Sheets localizzato in italiano (es. 1.6512 -> "165.12.00").
 """
 
 import io
+import random
 import sys
 import time
 from datetime import datetime, timedelta, timezone
@@ -53,9 +54,24 @@ HTTP_HEADERS = {
     "Accept-Language": "it-IT,it;q=0.9",
 }
 
-# Retry con backoff esponenziale: 4 tentativi, attese 20s / 40s / 80s
-MAX_TENTATIVI = 4
+# Retry con backoff esponenziale, tetto e jitter.
+#
+# Storico dei fallimenti (tab metadati_aggiornamento, mag-ago 2026): 7 casi di
+# "Download prezzi MIMIT fallito dopo 4 tentativi" per timeout HTTPS verso
+# www.mimit.gov.it dai runner GitHub, circa uno a settimana.
+# La configurazione precedente (4 tentativi, timeout unico 60s, attese
+# 20/40/80s) esauriva i tentativi in circa 6-7 minuti.
+#
+# Ora: piu' tentativi, timeout di connessione e di lettura separati (il
+# problema osservato e' la lettura lenta, non la connessione), attese piu'
+# lunghe ma con tetto, jitter per non ripresentarsi sempre allo stesso
+# istante, e un budget complessivo per non sforare il timeout del workflow.
+MAX_TENTATIVI = 6
 ATTESA_BASE_SEC = 20
+ATTESA_MAX_SEC = 180
+TIMEOUT_CONNECT_SEC = 15
+TIMEOUT_READ_SEC = 120
+BUDGET_DOWNLOAD_SEC = 600
 
 SIGLE_PROVINCE_REGIONE = {
     "TO": "Piemonte", "VC": "Piemonte", "NO": "Piemonte", "CN": "Piemonte",
@@ -165,24 +181,58 @@ def download_csv(url: str, label: str) -> pd.DataFrame:
     logger.info(f"Download {label}: {url}")
     response = None
     ultimo_errore = None
+    tentativi_fatti = 0
+    inizio = time.monotonic()
+
     for tentativo in range(1, MAX_TENTATIVI + 1):
+        tentativi_fatti = tentativo
         try:
-            response = requests.get(url, timeout=60, headers=HTTP_HEADERS)
+            response = requests.get(
+                url,
+                timeout=(TIMEOUT_CONNECT_SEC, TIMEOUT_READ_SEC),
+                headers=HTTP_HEADERS,
+            )
             response.raise_for_status()
             break
         except requests.RequestException as e:
+            # FIX: azzerare response e' necessario. Con raise_for_status() la
+            # variabile restava valorizzata con la risposta di errore (es. 503)
+            # e, esaurito il loop, il controllo "if response is None" non
+            # scattava: si finiva per parsare come CSV una pagina di errore.
+            response = None
             ultimo_errore = e
             logger.warning(
                 f"  Tentativo {tentativo}/{MAX_TENTATIVI} fallito per {label}: {e}"
             )
-            if tentativo < MAX_TENTATIVI:
-                attesa = ATTESA_BASE_SEC * (2 ** (tentativo - 1))
-                logger.info(f"  Riprovo tra {attesa}s...")
-                time.sleep(attesa)
+
+            if tentativo >= MAX_TENTATIVI:
+                break
+
+            attesa = min(ATTESA_BASE_SEC * (2 ** (tentativo - 1)), ATTESA_MAX_SEC)
+            attesa += random.uniform(0, attesa * 0.25)
+
+            trascorso = time.monotonic() - inizio
+            if trascorso + attesa > BUDGET_DOWNLOAD_SEC:
+                logger.warning(
+                    f"  Budget di {BUDGET_DOWNLOAD_SEC}s esaurito "
+                    f"({trascorso:.0f}s gia' spesi): interrompo i tentativi"
+                )
+                break
+
+            logger.info(f"  Riprovo tra {attesa:.0f}s...")
+            time.sleep(attesa)
+
     if response is None:
+        durata = time.monotonic() - inizio
         raise RuntimeError(
-            f"Download {label} fallito dopo {MAX_TENTATIVI} tentativi: {ultimo_errore}"
+            f"Download {label} fallito dopo {tentativi_fatti} tentativi "
+            f"in {durata:.0f}s: {ultimo_errore}"
         )
+
+    logger.info(
+        f"  Download riuscito al tentativo {tentativi_fatti}/{MAX_TENTATIVI} "
+        f"in {time.monotonic() - inizio:.1f}s"
+    )
 
     try:
         text = response.content.decode("utf-8")

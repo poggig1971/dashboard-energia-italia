@@ -1,0 +1,55 @@
+name: Keepalive cron (anti-disabilitazione 60 giorni)
+
+# GitHub disabilita automaticamente i workflow schedulati di un repository
+# pubblico dopo 60 giorni senza attivita' sul repository.
+# Le esecuzioni delle Actions NON contano come attivita': contano i commit.
+# Poiche' gli ETL scrivono su Google Sheets e non committano nulla, il repo
+# risulta fermo e i cron vengono spenti (accaduto il 10-11/08/2026).
+#
+# Questo workflow committa un timestamp una volta al mese, ma solo se il
+# repository e' realmente inattivo da almeno 20 giorni: se stai lavorando
+# al progetto non aggiunge rumore alla history.
+#
+# Rif.: https://docs.github.com/en/actions/how-tos/manage-workflow-runs/disable-and-enable-workflows
+
+on:
+  schedule:
+    # Il primo giorno di ogni mese alle 06:00 UTC
+    - cron: '0 6 1 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout codice
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Commit di keepalive se il repo e' inattivo
+        run: |
+          set -euo pipefail
+
+          ultimo_commit=$(git log -1 --format=%ct)
+          giorni=$(( ( $(date +%s) - ultimo_commit ) / 86400 ))
+          echo "Giorni trascorsi dall'ultimo commit: ${giorni}"
+
+          if [ "${giorni}" -lt 20 ]; then
+            echo "Repository attivo: nessun commit di keepalive necessario."
+            exit 0
+          fi
+
+          date -u +"%Y-%m-%dT%H:%M:%SZ" > .github/keepalive.txt
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .github/keepalive.txt
+          git commit -m "chore(ci): keepalive - mantiene attivi i workflow schedulati"
+          git push
+          echo "Commit di keepalive eseguito."
