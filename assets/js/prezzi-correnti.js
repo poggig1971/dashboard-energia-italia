@@ -141,7 +141,8 @@ const PrezziCorrentiTab = (function () {
                     <div id="map-wrapper" style="position: relative;"></div>
                 </div>
                 <div class="ranking-container">
-                    <h3 class="ranking-title">Classifica provinciale</h3>
+                    <h3 class="ranking-title">Classifica provinciale
+                        <span class="ranking-ord">dalla più economica alla più cara</span></h3>
                     <div class="ranking-filters">
                         <button class="ranking-filter-btn active" data-limit="10">Top 10</button>
                         <button class="ranking-filter-btn" data-limit="20">Top 20</button>

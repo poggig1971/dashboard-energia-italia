@@ -2644,3 +2644,36 @@ body { font-size: 13px; }
 .met-row-off td { color: #8b97a5; }
 .met-row-off td:first-child { font-style: italic; }
 .met-gg { color: #98a2ad; font-size: 10.5px; }
+
+
+/* ---------- Testata sotto i 768px ----------
+   L'impaginazione originale manda la testata in colonna sotto i 768px. In
+   colonna il flex-basis governa l'ALTEZZA, e il "flex: 1 1 200px" scritto per
+   la disposizione a riga produceva un blocco titolo alto 200px: una banda
+   vuota di oltre 200 pixel fra il sottotitolo e i badge, con la testata a
+   432px su uno schermo da telefono. In piu' la fila dei badge, non potendo
+   andare a capo, faceva scorrere la pagina in orizzontale. */
+@media (max-width: 768px) {
+    .dashboard-header .header-content {
+        align-items: flex-start; gap: 8px; padding: 8px 11px;
+    }
+    .header-title { flex: 0 0 auto; width: 100%; min-width: 0; }
+    .topbar-kpis { flex-wrap: wrap; width: 100%; }
+    .tb-kpi { flex: 1 1 auto; min-width: 62px; }
+    .header-actions { margin-left: 0; width: 100%; }
+    /* Le fonti restano su righe che vanno a capo: messe in colonna
+       impilavano otto link e da sole facevano 200px di testata. */
+    .header-sources { gap: 3px 6px; font-size: 10px; }
+    .header-sources .hs-sheet { margin-left: 0; margin-top: 2px; }
+}
+
+/* verso dell'ordinamento accanto al titolo della classifica */
+.ranking-ord {
+    display: block; font-size: 10.5px; font-weight: 400;
+    color: var(--color-text-light); letter-spacing: 0; margin-top: 1px;
+}
+/* avviso sulla settimana mancante nella scheda Variazioni */
+.var-period-warn {
+    display: block; margin-top: 3px; font-size: 11px; font-style: italic;
+    color: var(--accent);
+}

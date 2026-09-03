@@ -287,6 +287,9 @@ const VariazioniTab = (function () {
                 Confronto <strong>${formatDateIT(settimanaCorrente)}</strong> vs
                 <strong>${formatDateIT(settimanaConfronto)}</strong>
                 <span class="var-period-label">(${label})</span>
+                ${periodo.mancante ? `<span class="var-period-warn">la settimana del
+                   ${formatDateIT(periodo.mancante)} non è stata caricata: si usa la più vicina
+                   disponibile e la distanza indicata è quella reale</span>` : ""}
             </div>
 
             <div class="var-kpi-grid">
@@ -348,34 +351,72 @@ const VariazioniTab = (function () {
         `;
     }
 
+    /* Spostamento e distanza in settimane fra due lunedi ISO. */
+    function spostaSettimane(iso, n) {
+        const d = new Date(iso + "T00:00:00Z");
+        d.setUTCDate(d.getUTCDate() + 7 * n);
+        return d.toISOString().slice(0, 10);
+    }
+    function settimaneTra(a, b) {
+        const ms = new Date(b + "T00:00:00Z") - new Date(a + "T00:00:00Z");
+        return Math.round(ms / (7 * 86400000));
+    }
+
+    /**
+     * Sceglie la settimana di confronto PER DATA, non per posizione nell'elenco.
+     *
+     * Con la posizione (n-2, n-5, n-14) bastava una settimana non caricata per
+     * far mentire l'etichetta: con il 17 e il 24 agosto mancanti, il confronto
+     * "settimana precedente" del rapporto al 31 agosto cadeva sul 10 agosto,
+     * cioe' TRE settimane, pur continuando a chiamarsi settimanale. I numeri
+     * erano giusti, l'etichetta no — ed e' l'etichetta che viene citata.
+     *
+     * Ora si cerca la settimana teorica; se non c'e' si prende la piu' vicina
+     * disponibile e si restituisce la DISTANZA REALE piu' la settimana mancante,
+     * cosi' l'interfaccia puo' dichiararle entrambe.
+     */
+    function scegliConfronto(nSettimane) {
+        const n = _settimaneDisponibili.length;
+        if (n < 2) return null;
+        const ultima = _settimaneDisponibili[n - 1];
+        const target = spostaSettimane(ultima, -nSettimane);
+
+        if (_settimaneDisponibili.includes(target)) {
+            return { w: target, esatto: true, delta: nSettimane, target };
+        }
+        const precedenti = _settimaneDisponibili.filter(w => w < ultima);
+        if (!precedenti.length) return null;
+        let best = precedenti[0];
+        precedenti.forEach(w => {
+            if (Math.abs(settimaneTra(w, target)) < Math.abs(settimaneTra(best, target))) best = w;
+        });
+        return { w: best, esatto: false, delta: settimaneTra(best, ultima), target };
+    }
+
+    function etichettaDistanza(d) {
+        return Math.abs(d) === 1 ? "1 settimana" : Math.abs(d) + " settimane";
+    }
+
     function determinaPeriodoCarburanti() {
         const n = _settimaneDisponibili.length;
         if (n < 2) return null;
         const ultima = _settimaneDisponibili[n - 1];
 
-        if (_selectedPeriodo === "settimana") {
+        const perSettimane = nSett => {
+            const r = scegliConfronto(nSett);
+            if (!r) return null;
             return {
                 settimanaCorrente: ultima,
-                settimanaConfronto: _settimaneDisponibili[n - 2],
-                label: "settimanale",
+                settimanaConfronto: r.w,
+                label: etichettaDistanza(r.delta),
+                esatto: r.esatto,
+                mancante: r.esatto ? null : r.target,
             };
-        }
-        if (_selectedPeriodo === "4settimane") {
-            if (n < 5) return null;
-            return {
-                settimanaCorrente: ultima,
-                settimanaConfronto: _settimaneDisponibili[n - 5],
-                label: "4 settimane",
-            };
-        }
-        if (_selectedPeriodo === "13settimane") {
-            if (n < 14) return null;
-            return {
-                settimanaCorrente: ultima,
-                settimanaConfronto: _settimaneDisponibili[n - 14],
-                label: "13 settimane",
-            };
-        }
+        };
+
+        if (_selectedPeriodo === "settimana")    return perSettimane(1);
+        if (_selectedPeriodo === "4settimane")   { if (n < 3) return null; return perSettimane(4); }
+        if (_selectedPeriodo === "13settimane")  { if (n < 3) return null; return perSettimane(13); }
         if (_selectedPeriodo === "custom") {
             if (!_customDataFrom || !_customDataTo) return null;
             if (_customDataFrom >= _customDataTo) return null;
@@ -387,6 +428,8 @@ const VariazioniTab = (function () {
                 settimanaCorrente: sCorr,
                 settimanaConfronto: sConf,
                 label: "intervallo personalizzato",
+                esatto: true,
+                mancante: null,
             };
         }
         return null;

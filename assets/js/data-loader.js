@@ -11,6 +11,12 @@
 const DataLoader = (function () {
     // Cache in-memory dei CSV già caricati
     const cache = {};
+    // Richieste ancora in volo. Senza questa, due moduli che chiedono lo stesso
+    // tab nello stesso istante (i badge KPI e la scheda Prezzi correnti allo
+    // avvio) partono entrambi prima che la cache sia popolata e scaricano due
+    // volte lo stesso file: sul foglio dei prezzi sono 1.590 righe scaricate
+    // due volte a ogni apertura della pagina.
+    const inVolo = {};
 
     /**
      * Carica un tab del Google Sheet come array di oggetti JS.
@@ -22,10 +28,14 @@ const DataLoader = (function () {
         if (!forceReload && cache[tabName]) {
             return cache[tabName];
         }
+        if (!forceReload && inVolo[tabName]) {
+            return inVolo[tabName];
+        }
 
         const url = window.CONFIG.CSV_BASE_URL(tabName);
         console.log(`[DataLoader] Caricamento tab "${tabName}" da:`, url);
 
+        const promessa = (async () => {
         try {
             const response = await fetch(url);
             if (!response.ok) {
@@ -39,7 +49,13 @@ const DataLoader = (function () {
         } catch (err) {
             console.error(`[DataLoader] Errore caricamento tab "${tabName}":`, err);
             throw err;
+        } finally {
+            delete inVolo[tabName];
         }
+        })();
+
+        inVolo[tabName] = promessa;
+        return promessa;
     }
 
     /**
@@ -129,6 +145,9 @@ const DataLoader = (function () {
     function clearCache() {
         for (const key in cache) {
             delete cache[key];
+        }
+        for (const key in inVolo) {
+            delete inVolo[key];
         }
         console.log("[DataLoader] Cache svuotata");
     }
