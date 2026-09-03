@@ -151,6 +151,51 @@ Dashboard (GitHub Pages, D3.js)</pre>
             </details>
 
             <details class="met-block" open>
+                <summary>Reportistica — regole di elaborazione</summary>
+                <div class="met-block-body">
+                    <p>
+                        La scheda <strong>Reportistica</strong> produce un rapporto stampabile a livello
+                        provinciale o regionale. Le regole che segue sono dichiarate anche dentro al
+                        documento stesso, ma vanno indicate qui perché sono scelte metodologiche a tutti
+                        gli effetti.
+                    </p>
+                    <p><strong>Granularità a ripiego dichiarato.</strong> L'ordine è
+                        <em>provinciale → regionale → nazionale</em>. Quando un valore non esiste alla
+                        granularità richiesta si scende di livello e lo si <strong>etichetta</strong>
+                        in tabella (es. il metano nelle province senza distributori), invece di
+                        presentarlo come se fosse un dato provinciale. Per i prezzi finali dell'energia
+                        elettrica non esiste alcun ripiego possibile: sono nazionali e trimestrali,
+                        e nessuna stima provinciale o regionale viene prodotta.</p>
+                    <p><strong>Confronti temporali scelti per data.</strong> I riferimenti sono cercati
+                        a −1, −4 e −13 settimane dalla data di riferimento. Se la settimana teorica non
+                        è stata caricata si usa la più vicina disponibile e l'intestazione dichiara la
+                        <strong>distanza reale</strong> più la settimana mancante: un confronto
+                        etichettato «settimana precedente» ma calcolato su tre settimane sarebbe
+                        fuorviante. Fra due riferimenti è imposta una distanza minima di due settimane,
+                        perché due colonne quasi sovrapposte non aggiungono informazione.</p>
+                    <p><strong>Continuità della serie.</strong> Se fra la prima e l'ultima settimana
+                        caricata ne mancano, il rapporto lo dichiara in testa e nelle note di lettura,
+                        elencando quali. Un buco taciuto è peggio di un buco dichiarato.</p>
+                    <p><strong>Soglie della scala di scostamento.</strong> Nel dettaglio provinciale le
+                        fasce di colore usano soglie <strong>fisse</strong>: sotto
+                        <code>0,5 c€/l</code> lo scarto è considerato «in linea» (è sotto la soglia di
+                        percezione alla pompa), oltre <code>2 c€/l</code> è «marcato» (circa l'1% del
+                        prezzo di un litro). Non sono percentuali dello scarto massimo: una soglia
+                        calcolata sul dato più estremo si sposterebbe a ogni aggiornamento e farebbe
+                        cambiare colore a province rimaste ferme.</p>
+                    <p><strong>Numeri indice.</strong> Il grafico «Rincari a confronto» pone ogni
+                        carburante uguale a 100 nella prima settimana disponibile. Serve a confrontare
+                        le <em>variazioni</em>, non i livelli: un territorio può stare sotto la media
+                        nazionale e insieme rincarare più degli altri.</p>
+                    <p class="met-note">
+                        Le medie territoriali sono aritmetiche semplici sulle province, non ponderate
+                        per popolazione, consumi o numero di impianti: una provincia piccola pesa
+                        quanto una grande.
+                    </p>
+                </div>
+            </details>
+
+            <details class="met-block" open>
                 <summary>Annotazioni eventi nei grafici</summary>
                 <div class="met-block-body">
                     <p>
@@ -219,16 +264,33 @@ Dashboard (GitHub Pages, D3.js)</pre>
                 return;
             }
 
+            // Una fonte ferma da mesi non e' necessariamente guasta: puo' essere
+            // un ETL sostituito da un altro. Ma dal solo log NON si distingue un
+            // ETL dismesso da uno rotto, quindi la tabella dichiara il FATTO
+            // ("inattiva da N giorni") e non l'interpretazione: chiamarla "non
+            // piu' in uso" trasformerebbe un guasto vero in un'etichetta
+            // rassicurante e spegnerebbe l'allarme.
+            const GIORNI_INATTIVA = 90;
+            const oraMs = Date.now();
+            const giorniDa = ts => {
+                const d = Date.parse(String(ts || "").replace(" UTC", "Z").replace(" ", "T"));
+                return isNaN(d) ? null : Math.floor((oraMs - d) / 86400000);
+            };
+
             const righe = fonti.map(f => {
                 const r = ultimaPerFonte[f];
                 const ok = String(r.esito).toLowerCase() === "ok";
-                const badge = ok
-                    ? `<span class="met-badge met-badge-ok">ok</span>`
-                    : `<span class="met-badge met-badge-err">errore</span>`;
+                const gg = giorniDa(r.data_ultimo_refresh);
+                const inattiva = gg != null && gg > GIORNI_INATTIVA;
+                const badge = inattiva
+                    ? `<span class="met-badge met-badge-off" title="Nessuna esecuzione da ${gg} giorni">inattiva</span>`
+                    : ok
+                        ? `<span class="met-badge met-badge-ok">ok</span>`
+                        : `<span class="met-badge met-badge-err">errore</span>`;
                 const nRec = (r.record_caricati != null) ? r.record_caricati : "—";
-                return `<tr>
+                return `<tr${inattiva ? ' class="met-row-off"' : ""}>
                     <td>${escapeHtml(String(f))}</td>
-                    <td>${escapeHtml(String(r.data_ultimo_refresh || "n.d."))}</td>
+                    <td>${escapeHtml(String(r.data_ultimo_refresh || "n.d."))}${gg != null ? ` <span class="met-gg">(${gg} gg fa)</span>` : ""}</td>
                     <td class="num">${escapeHtml(String(nRec))}</td>
                     <td>${badge}</td>
                 </tr>`;
@@ -243,7 +305,11 @@ Dashboard (GitHub Pages, D3.js)</pre>
                 </table>
                 <p class="met-note">
                     In caso di esito "errore" il dato visualizzato resta quello dell'ultima
-                    esecuzione completata con successo.
+                    esecuzione completata con successo. Una fonte senza esecuzioni da oltre
+                    ${GIORNI_INATTIVA} giorni è contrassegnata <strong>«inattiva»</strong>: può trattarsi
+                    di un ETL sostituito da un altro oppure di un aggiornamento interrotto. Dal solo
+                    log le due cose non si distinguono, perciò qui si riporta il fatto — da quanto
+                    tempo non gira — e non un'interpretazione.
                 </p>`;
         } catch (err) {
             console.warn("[Metodologia] Stato aggiornamenti non disponibile:", err);

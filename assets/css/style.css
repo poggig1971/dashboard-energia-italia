@@ -2635,3 +2635,12 @@ body { font-size: 13px; }
 .tab-btn[data-tab="reportistica"].active {
     color: #b8461a; border-bottom-color: var(--accent);
 }
+
+
+/* ---------- Metodologia: fonti dismesse ---------- */
+.met-badge-off {
+    background: #eef1f5; color: #6b7a8c; border: 1px solid var(--color-border);
+}
+.met-row-off td { color: #8b97a5; }
+.met-row-off td:first-child { font-style: italic; }
+.met-gg { color: #98a2ad; font-size: 10.5px; }

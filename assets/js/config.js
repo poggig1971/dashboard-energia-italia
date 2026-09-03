@@ -95,7 +95,7 @@ const CONFIG = {
   ],
 
   // Versione e ultimo deploy
-  VERSION: "0.9.5-alpha",
+  VERSION: "0.9.6-alpha",
   REPO_URL: "https://github.com/poggig1971/dashboard-energia-italia",
 };
 
