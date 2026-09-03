@@ -31,6 +31,35 @@ const CONFIG = {
     metadati_aggiornamento: "metadati_aggiornamento",
   },
 
+  // Foglio dati pubblico in SOLA LETTURA.
+  // "/preview" apre il foglio in visualizzazione, senza barra dei menu e
+  // senza possibilita' di modifica. Richiede che la condivisione del foglio
+  // sia impostata su "Chiunque abbia il link - Visualizzatore".
+  GSHEET_VIEW_URL: function () {
+    return `https://docs.google.com/spreadsheets/d/${this.GSHEET_ID}/preview`;
+  },
+
+  // Censimento delle fonti: usato sia dalla barra in testata sia dalla
+  // sezione "Fonti e accesso ai dati" del rapporto stampabile.
+  FONTI: [
+    { ente: "MIMIT",     cosa: "Prezzi praticati dei carburanti e anagrafica degli impianti (rilevazione ore 8, licenza IODL 2.0)",
+      url: "https://www.mimit.gov.it/it/open-data/elenco-dataset/carburanti-prezzi-praticati-e-anagrafica-degli-impianti" },
+    { ente: "MIMIT — archivio storico", cosa: "Serie storiche trimestrali dei prezzi giornalieri, da marzo 2015",
+      url: "https://www.mimit.gov.it/it/open-data/elenco-dataset/carburanti-archivio-prezzi" },
+    { ente: "ARERA",     cosa: "Prezzi finali dell'energia elettrica per il cliente domestico tipo (dato nazionale trimestrale)",
+      url: "https://www.arera.it/dati-e-statistiche" },
+    { ente: "MASE",      cosa: "Prezzi settimanali medi nazionali dei carburanti",
+      url: "https://sisen.mase.gov.it/dgsaie/prezzi-settimanali-carburanti" },
+    { ente: "Terna",     cosa: "Statistiche sull'energia elettrica, bilanci regionali",
+      url: "https://dati.terna.it" },
+    { ente: "GME",       cosa: "Prezzi zonali del mercato elettrico",
+      url: "https://gme.mercatoelettrico.org" },
+    { ente: "Eurostat",  cosa: "Confronti europei sui prezzi dell'energia",
+      url: "https://ec.europa.eu/eurostat" },
+    { ente: "Openpolis", cosa: "Confini provinciali su dati ISTAT (CC-BY 4.0)",
+      url: "https://github.com/openpolis/geojson-italy" },
+  ],
+
   // Percorsi asset locali
   TOPOJSON_PROVINCE: "assets/data/italy-provinces.topojson",
 
@@ -66,7 +95,7 @@ const CONFIG = {
   ],
 
   // Versione e ultimo deploy
-  VERSION: "0.6.0-alpha",
+  VERSION: "0.7.0-alpha",
   REPO_URL: "https://github.com/poggig1971/dashboard-energia-italia",
 };
 

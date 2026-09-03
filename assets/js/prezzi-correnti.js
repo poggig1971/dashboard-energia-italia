@@ -347,7 +347,9 @@ const PrezziCorrentiTab = (function () {
                 ${rows.map((r, i) => {
                     const delta = ((r[col] - mediaNaz) / mediaNaz) * 100;
                     const deltaStr = (delta >= 0 ? "+" : "") + delta.toFixed(1) + "%";
-                    const deltaColor = delta < 0 ? "#16a34a" : "#dc2626";
+                    // Scala divergente validata: il verde/rosso non e distinguibile
+                    // in deuteranopia, la coppia blu/rosso si (DeltaE 16,3 protan).
+                    const deltaColor = delta < 0 ? "var(--div-1)" : "var(--div-5)";
                     return `
                         <tr data-sigla="${r.provincia_sigla}">
                             <td class="rank-num">${i + 1}</td>

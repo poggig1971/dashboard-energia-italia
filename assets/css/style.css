@@ -6,23 +6,47 @@
  */
 
 :root {
-    --color-primary: #1e3a8a;
-    --color-primary-hover: #1e40af;
-    --color-text: #1f2937;
-    --color-text-light: #6b7280;
+    /* --- Palette istituzionale ANCE Piemonte e Valle d'Aosta --- */
+    --color-primary: #1e3d6b;
+    --color-primary-hover: #17304f;
+    --color-text: #1f2a37;
+    --color-text-light: #6b7a8c;
     --color-bg: #ffffff;
-    --color-bg-alt: #f9fafb;
-    --color-border: #e5e7eb;
-    --color-success: #16a34a;
-    --color-warning: #f59e0b;
-    --color-danger: #dc2626;
+    --color-bg-alt: #eef1f5;
+    --color-border: #d7dee6;
+    --color-success: #1a7f4b;
+    --color-warning: #d9541f;
+    --color-danger: #b03a2e;
 
-    --font-sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-    --font-mono: 'IBM Plex Mono', 'SF Mono', monospace;
+    /* Tinte ANCE */
+    --navy: #1e3d6b;
+    --navy-dk: #17304f;
+    --navy-th: #22467a;
+    --navy-soft: #2c5490;
+    --red-badge: #7e2a33;
+    --red-badge-bd: #a04049;
+    --peach: #fce4d6;
+    --peach-hover: #f9d9c6;
+    --bd-cell: #dde3ea;
+    --accent: #d9541f;
+    --row-hover: #f5f8fc;
+    --callout-bg: #eef4fb;
+
+    /* Scala divergente validata (poli DeltaE 16,3 protan / 25,9 visione normale,
+       luminosita monotona verso il grigio centrale). Codifica il SEGNO di uno
+       scostamento, mai l'identita di una categoria. */
+    --div-1: #1a5c96;
+    --div-2: #6d9dc5;
+    --div-3: #b4bcc4;
+    --div-4: #dd9a6a;
+    --div-5: #b03a2e;
+
+    --font-sans: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-mono: ui-monospace, "Cascadia Mono", "Segoe UI Mono", Consolas, "Courier New", monospace;
 
     --radius: 6px;
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+    --shadow-md: 0 1px 3px rgba(23, 48, 79, 0.10);
 }
 
 * { box-sizing: border-box; }
@@ -2175,4 +2199,362 @@ html, body {
     .met-block-body {
         padding: 0.75rem;
     }
+}
+
+
+/* ============================================================
+   LIVELLO ANCE — design system istituzionale
+   Sovrascrive i componenti condivisi mantenendo intatte le
+   classi generate dai moduli (elt-*, ss-*, var-*, met-*, map-*).
+   ============================================================ */
+
+body { font-size: 13px; }
+
+/* ---------- TOPBAR ---------- */
+.dashboard-header {
+    background: var(--navy);
+    padding: 0;
+    box-shadow: none;
+    position: sticky; top: 0; z-index: 40;
+}
+.dashboard-header .header-content {
+    max-width: none;
+    gap: 13px;
+    padding: 8px 13px;
+    flex-wrap: nowrap;
+    align-items: center;
+}
+.header-logo img { height: 34px; padding: 5px 9px; border-radius: 5px; }
+.header-title { flex: 1 1 200px; min-width: 160px; overflow: hidden; }
+.header-title h1 { font-size: 15px; letter-spacing: .01em; }
+.header-subtitle { margin: 1px 0 0; font-size: 11px; opacity: 1; color: #a9c3e4; }
+
+.topbar-kpis { display: flex; gap: 6px; flex: none; }
+.tb-kpi {
+    background: rgba(255,255,255,.09);
+    border: 1px solid rgba(255,255,255,.22);
+    border-radius: var(--radius);
+    padding: 4px 10px; text-align: center; min-width: 74px;
+}
+.tb-kpi b { display: block; font-size: 17.5px; font-weight: 700; line-height: 1.15; color: #fff;
+            font-variant-numeric: tabular-nums; }
+.tb-kpi span { display: block; font-size: 8px; font-weight: 700; letter-spacing: .09em;
+               color: #a9c3e4; margin-top: 1px; white-space: nowrap; }
+.tb-kpi.alert { background: var(--red-badge); border-color: var(--red-badge-bd); }
+.tb-kpi.alert span { color: #e8b8bc; }
+
+.header-actions { flex: none; gap: 6px; }
+.btn-icon {
+    background: none; border: 1px solid rgba(255,255,255,.38);
+    width: auto; height: auto; padding: 6px 11px; font-size: 12px; border-radius: 5px;
+}
+.btn-icon:hover { background: rgba(255,255,255,.13); }
+.header-sources {
+    background: var(--navy-dk); color: #a9c3e4;
+    padding: 5px 13px; font-size: 10.5px; letter-spacing: .01em;
+}
+.header-sources a { color: #cfe0f4; text-decoration: none; }
+.header-sources a:hover { text-decoration: underline; }
+
+/* ---------- NAVIGAZIONE SCHEDE ---------- */
+.tab-nav {
+    background: #fff; border-bottom: 1px solid var(--color-border);
+    padding: 0 13px; display: flex; gap: 0; overflow-x: auto;
+    position: sticky; top: 71px; z-index: 35;
+}
+.tab-btn {
+    background: none; border: none; border-bottom: 3px solid transparent;
+    padding: 9px 15px; font: 600 12.5px var(--font-sans); color: var(--color-text-light);
+    cursor: pointer; white-space: nowrap;
+}
+.tab-btn:hover { color: var(--navy); background: var(--callout-bg); }
+.tab-btn.active { color: var(--navy); border-bottom-color: var(--navy); background: none; }
+
+/* ---------- PANNELLI ---------- */
+.dashboard-main { max-width: none; padding: 12px 13px; }
+.panel {
+    background: #fff; border: 1px solid var(--color-border);
+    border-radius: var(--radius); margin-bottom: 12px; overflow: hidden;
+}
+.panel > .panel-head {
+    background: var(--navy); color: #fff; padding: 8px 13px;
+    font-size: 13px; font-weight: 600; display: flex;
+    justify-content: space-between; align-items: center; gap: 10px; cursor: pointer;
+}
+.panel > .panel-head::after { content: "⌄"; font-size: 15px; line-height: 1; opacity: .85; }
+.panel.collapsed > .panel-head::after { content: "›"; }
+.panel.collapsed > .panel-body { display: none; }
+.panel-head .ph-meta { font-weight: 400; font-size: 11.5px; color: #bcd2ec; margin-left: auto; }
+.panel-body { padding: 11px 12px 12px; }
+
+.callout {
+    background: var(--callout-bg); border-left: 3px solid var(--navy);
+    padding: 8px 11px; font-size: 12px; margin-bottom: 11px; border-radius: 0 3px 3px 0;
+}
+.note-fonte {
+    font-size: 10.5px; color: var(--color-text-light); font-style: italic; margin: 7px 2px 0;
+}
+
+/* ---------- TABELLE ---------- */
+.ranking-table, .ss-table, .var-classifica-table, .met-table, .ance-table {
+    width: 100%; border-collapse: collapse; font-size: 12px;
+}
+.ranking-table th, .ss-table th, .var-classifica-table th, .met-table th, .ance-table th {
+    background: var(--navy-th); color: #fff; font-weight: 600;
+    padding: 6px 7px; border: 1px solid var(--navy-dk);
+    text-align: center; white-space: nowrap; text-transform: none; letter-spacing: 0;
+}
+.ance-table th.sub { background: var(--navy-soft); font-weight: 500; font-size: 11px; }
+.ranking-table td, .ss-table td, .var-classifica-table td, .met-table td, .ance-table td {
+    border: 1px solid var(--bd-cell); padding: 4px 7px; background: #fff;
+}
+.ranking-table tbody tr:hover td, .ss-table tbody tr:hover td,
+.var-classifica-table tbody tr:hover td, .ance-table tbody tr:hover td { background: var(--row-hover); }
+.ance-table .num, .ranking-table .num, .ss-table .num {
+    text-align: right; font-variant-numeric: tabular-nums; font-family: inherit;
+}
+.ance-table .ctr { text-align: center; }
+.ance-table .nm { font-weight: 600; color: var(--navy); }
+.ance-table .hl, td.hl { background: var(--peach); }
+.ance-table tbody tr:hover td.hl { background: var(--peach-hover); }
+.ance-table tr.tot td { background: #e8ebee; font-weight: 700; }
+.table-scroll {
+    max-height: 430px; overflow: auto;
+    border: 1px solid var(--bd-cell); border-radius: 3px;
+}
+.table-scroll table { border-collapse: separate; border-spacing: 0; }
+.table-scroll th { position: sticky; top: 0; z-index: 2; }
+
+/* Segno di uno scostamento: scala divergente, non rosso/verde
+   (il rosso/verde non e leggibile in deuteranopia) */
+.var-trend-up, .up { color: var(--div-5); font-weight: 600; }
+.var-trend-down, .dn { color: var(--div-1); font-weight: 600; }
+
+/* ---------- KPI DI SCHEDA ---------- */
+.kpi-card, .var-kpi-card, .elt-kpi-principal-card {
+    background: #fff; border: 1px solid var(--color-border);
+    border-radius: var(--radius); box-shadow: none;
+}
+.kpi-value, .var-kpi-value, .elt-kpi-principal-value {
+    color: var(--navy); font-variant-numeric: tabular-nums;
+}
+
+/* ---------- CONTROLLI ---------- */
+.tab-controls, .ss-controls, .var-controls {
+    background: #fff; border: 1px solid var(--color-border);
+    border-radius: var(--radius); padding: 10px 12px; margin-bottom: 12px;
+}
+.control-label, .ss-control-label, .var-control-label {
+    font-size: 9.5px; font-weight: 700; letter-spacing: .11em;
+    text-transform: uppercase; color: #7b8794;
+}
+.ranking-filter-btn {
+    border: 1px solid var(--color-border); background: #fff;
+    color: var(--navy); border-radius: 3px; padding: 4px 10px; font-size: 12px; cursor: pointer;
+}
+.ranking-filter-btn:hover { background: var(--callout-bg); }
+.ranking-filter-btn.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+
+/* ---------- BARRE DIVERGENTI ---------- */
+.dv { display: grid; grid-template-columns: 150px 1fr 78px; gap: 2px 9px; align-items: center; font-size: 12px; }
+.dv .lab { text-align: right; color: var(--navy); font-weight: 600;
+           white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dv .track { position: relative; height: 17px; background: #f4f6f9; border-radius: 2px; }
+.dv .axis { position: absolute; left: 50%; top: -2px; bottom: -2px; width: 1px; background: #b9c2cc; }
+.dv .bar { position: absolute; top: 2px; bottom: 2px; border-radius: 2px; }
+.dv .val { text-align: right; font-variant-numeric: tabular-nums; }
+.dv-legend { display: flex; gap: 13px; align-items: center; flex-wrap: wrap;
+             font-size: 11px; color: var(--color-text-light); margin-bottom: 9px; }
+.dv-legend i { display: inline-block; width: 11px; height: 11px;
+               border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+
+/* ---------- FOOTER ---------- */
+.dashboard-footer {
+    background: var(--navy-dk); color: #b9cbe2; font-size: 11px;
+    padding: 14px 16px; margin-top: 18px; max-width: none;
+}
+.dashboard-footer a { color: #cfe0f4; }
+.dashboard-footer strong { color: #fff; }
+
+@media (max-width: 1380px) {
+    .dashboard-header .header-content { flex-wrap: wrap; }
+    .header-actions { margin-left: auto; }
+    .tab-nav { top: auto; position: static; }
+}
+
+
+/* ============================================================
+   SCHEDA REPORTISTICA
+   Barra laterale delle opzioni + foglio del rapporto.
+   Il foglio e' pensato per essere identico a schermo e in stampa.
+   ============================================================ */
+
+.rep-layout { display: flex; gap: 12px; align-items: flex-start; }
+
+.rep-side {
+    width: 250px; flex: none; background: #fff;
+    border: 1px solid var(--color-border); border-radius: var(--radius);
+    padding: 12px; position: sticky; top: 122px;
+}
+.rep-side-title {
+    font-size: 10px; font-weight: 700; letter-spacing: .11em; color: var(--accent);
+    border-bottom: 1px solid var(--color-border); padding-bottom: 7px; margin-bottom: 4px;
+}
+.rep-lab {
+    display: block; font-size: 9.5px; font-weight: 700; letter-spacing: .1em;
+    color: #7b8794; margin: 13px 0 5px;
+}
+.rep-sel {
+    width: 100%; padding: 6px 8px; border: 1px solid var(--color-border);
+    border-radius: 4px; font: 12.5px var(--font-sans); background: #fff; color: var(--color-text);
+}
+.rep-check {
+    display: flex; align-items: center; gap: 7px; font-size: 12.5px;
+    padding: 3px 0; cursor: pointer; color: var(--navy);
+}
+.rep-btn {
+    width: 100%; margin-top: 15px; padding: 8px; background: var(--navy); color: #fff;
+    border: none; border-radius: 4px; font: 600 12.5px var(--font-sans); cursor: pointer;
+}
+.rep-btn:hover { background: var(--navy-dk); }
+.rep-hint { font-size: 10.5px; color: var(--color-text-light); line-height: 1.45; margin: 10px 0 0; }
+
+.rep-sheet {
+    flex: 1; min-width: 0; background: #fff;
+    border: 1px solid var(--color-border); border-radius: var(--radius);
+    padding: 22px 26px 26px;
+}
+.rep-h1 { margin: 0; font-size: 23px; color: var(--navy); font-weight: 700; line-height: 1.2; }
+.rep-sub { margin: 6px 0 0; font-size: 12px; color: var(--color-text-light); }
+.rep-rule { height: 3px; background: var(--navy); margin: 13px 0 18px; border-radius: 2px; }
+
+.rep-box {
+    border: 1px solid var(--color-border); border-radius: 5px;
+    padding: 13px 15px; margin-bottom: 14px;
+}
+.rep-h2 {
+    margin: 0 0 9px; font-size: 15px; color: var(--navy); font-weight: 700;
+    display: flex; align-items: center; gap: 9px;
+}
+.rep-h2::before {
+    content: ""; width: 4px; height: 16px; background: var(--navy);
+    border-radius: 2px; flex: none;
+}
+.rep-badge {
+    font-size: 9.5px; font-weight: 700; letter-spacing: .06em;
+    background: var(--peach); color: #8a3d18; padding: 2px 8px; border-radius: 10px;
+}
+.rep-p { font-size: 12px; margin: 0 0 10px; line-height: 1.55; }
+.rep-ul { margin: 0; padding-left: 18px; font-size: 12.5px; line-height: 1.7; }
+.rep-ul-note { font-size: 11.5px; line-height: 1.6; color: #414d5c; }
+.rep-key { color: var(--navy); }
+.rep-u { color: var(--color-text-light); font-size: 10.5px; font-weight: 400; }
+.rep-tag {
+    font-size: 9.5px; background: #eef1f5; border: 1px solid var(--color-border);
+    color: var(--color-text-light); padding: 1px 6px; border-radius: 9px; white-space: nowrap;
+}
+
+/* grafico del rapporto */
+.rep-chart { position: relative; margin: 6px 0 4px; }
+.g-svg { width: 100%; height: auto; display: block; }
+.g-ax { font-size: 9.5px; fill: #7b8794; }
+.g-lab { font-size: 11px; font-weight: 700; }
+.g-hot { cursor: crosshair; }
+.g-tip {
+    position: absolute; top: 30px; background: #fff; border: 1px solid var(--color-border);
+    border-radius: 4px; box-shadow: var(--shadow-md); padding: 7px 9px;
+    font-size: 11.5px; pointer-events: none; min-width: 165px;
+}
+.g-tip .tt-title { font-weight: 700; color: var(--navy); margin-bottom: 4px; }
+.g-tip .tt-row { display: flex; justify-content: space-between; gap: 12px; }
+.g-tip .tt-label i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 5px; }
+.g-tip .tt-value { font-variant-numeric: tabular-nums; font-weight: 600; }
+
+@media (max-width: 900px) {
+    .rep-layout { display: block; }
+    .rep-side { width: 100%; position: static; margin-bottom: 12px; }
+}
+
+/* ============================================================
+   STAMPA — impaginazione A4 del rapporto
+   Nasconde navigazione, filtri e livello interattivo; stampa
+   soltanto la scheda attiva.
+   ============================================================ */
+
+@media print {
+    @page { size: A4; margin: 13mm; }
+
+    .dashboard-header, .tab-nav, .dashboard-footer,
+    .header-actions, .header-sources, .no-print { display: none !important; }
+
+    .tab-content { display: none !important; }
+    .tab-content.active { display: block !important; }
+
+    /* Anche html, non solo body: la regola "html, body" iniziale applica
+       lo sfondo grigio della pagina e restava una fascia in fondo al PDF. */
+    html, body { background: #fff; }
+    body { font-size: 10.5pt; }
+    .dashboard-main, .tab-content, .rep-layout, .rep-sheet { background: #fff; }
+    .dashboard-main { padding: 0; max-width: none; }
+
+    .rep-layout { display: block; }
+    .rep-sheet { border: none; padding: 0; border-radius: 0; }
+    .rep-box { break-inside: avoid; page-break-inside: avoid; border-color: #c8ced6; }
+    .rep-h1 { font-size: 19pt; }
+    .rep-h2 { font-size: 12.5pt; }
+    .rep-chart { break-inside: avoid; page-break-inside: avoid; }
+    .g-tip, .g-cross { display: none !important; }
+
+    .ance-table, .ranking-table, .ss-table, .var-classifica-table, .met-table { font-size: 8.5pt; }
+    .ance-table th, .ranking-table th, .ss-table th,
+    .var-classifica-table th, .met-table th {
+        background: var(--navy-th) !important; color: #fff !important;
+        -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    td.hl, .ance-table .hl, .rep-badge, .callout, .dv .bar, .dv-legend i {
+        -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    .table-scroll { max-height: none; overflow: visible; border: none; }
+    .panel { break-inside: avoid; border-color: #c8ced6; }
+    a[href]::after { content: ""; }
+}
+
+
+/* ============================================================
+   FONTI — barra in testata e blocco nel rapporto
+   ============================================================ */
+
+.header-sources {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 4px 7px;
+}
+.header-sources .hs-lab { color: #8fa9c9; font-weight: 600; letter-spacing: .02em; }
+.header-sources a { color: #cfe0f4; text-decoration: none; border-bottom: 1px solid transparent; }
+.header-sources a:hover { border-bottom-color: #cfe0f4; }
+.header-sources .hs-sheet {
+    margin-left: auto; background: rgba(255,255,255,.10);
+    border: 1px solid rgba(255,255,255,.28); border-radius: 4px;
+    padding: 2px 9px; color: #fff; font-weight: 600; white-space: nowrap;
+}
+.header-sources .hs-sheet:hover { background: rgba(255,255,255,.18); border-bottom-color: transparent; }
+
+/* indirizzi per esteso: devono restare leggibili anche stampati */
+.rep-url {
+    font-family: var(--font-mono); font-size: 10px; color: var(--navy);
+    word-break: break-all; text-decoration: none; border-bottom: 1px solid #c3d2e4;
+}
+.rep-url:hover { border-bottom-color: var(--navy); }
+.rep-sheet-box {
+    margin-top: 12px; padding: 11px 13px; border: 1px solid var(--color-border);
+    border-left: 3px solid var(--accent); border-radius: 0 4px 4px 0; background: #fbfcfd;
+}
+.rep-sheet-t { font-weight: 700; color: var(--navy); font-size: 12.5px; margin-bottom: 4px; }
+.rep-ul-url { margin-top: 4px; }
+.rep-ul-url li { margin-bottom: 3px; }
+
+@media print {
+    /* Gli indirizzi sono gia' scritti per esteso nel testo: nessuna
+       espansione automatica, ma devono restare visibili e andare a capo. */
+    .rep-url { color: #1a3d6b !important; border-bottom: none; }
+    .rep-sheet-box { break-inside: avoid; page-break-inside: avoid; }
+    .rep-box .ance-table td:last-child { word-break: break-all; }
 }

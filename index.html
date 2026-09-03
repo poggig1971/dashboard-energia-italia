@@ -1,16 +1,12 @@
 <!DOCTYPE html>
 <html lang="it">
-    
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Energia Italia — ANCE Piemonte VdA</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <meta name="description" content="Dashboard pubblica sui prezzi e consumi energetici in Italia. Elaborazione ANCE Piemonte e Valle d'Aosta su dati MASE, MIMIT, Terna, GME, ARERA, Eurostat.">
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
@@ -23,21 +19,17 @@
             </div>
             <div class="header-title">
                 <h1>Dashboard Energia Italia</h1>
-                <p class="header-subtitle">Prezzi e consumi energetici · elaborazione ANCE Piemonte e Valle d'Aosta</p>
+                <p class="header-subtitle" id="header-subtitle">Prezzi e consumi energetici · elaborazione ANCE Piemonte e Valle d'Aosta</p>
             </div>
+            <div class="topbar-kpis" id="topbar-kpis"></div>
             <div class="header-actions">
-                <button id="btn-info" class="btn-icon" title="Come usare">?</button>
-                <button id="btn-refresh" class="btn-icon" title="Aggiorna dati">↻</button>
+                <button id="btn-refresh" class="btn-icon" title="Svuota la cache e ricarica i dati">↻ Aggiorna</button>
+                <button id="btn-print" class="btn-icon" title="Stampa la scheda corrente">🖨 Stampa</button>
             </div>
         </div>
-        <div class="header-sources">
-            <span>Fonti:</span>
-            <a href="https://sisen.mase.gov.it/dgsaie/prezzi-settimanali-carburanti" target="_blank" rel="noopener">MASE</a> ·
-            <a href="https://www.mimit.gov.it/it/open-data/elenco-dataset/carburanti-prezzi-praticati-e-anagrafica-degli-impianti" target="_blank" rel="noopener">MIMIT</a> ·
-            <a href="https://dati.terna.it" target="_blank" rel="noopener">Terna</a> ·
-            <a href="https://gme.mercatoelettrico.org" target="_blank" rel="noopener">GME</a> ·
-            <a href="https://www.arera.it/dati-e-statistiche" target="_blank" rel="noopener">ARERA</a> ·
-            <a href="https://ec.europa.eu/eurostat" target="_blank" rel="noopener">Eurostat</a>
+        <div class="header-sources" id="header-sources">
+            <span class="hs-lab">Fonti dati:</span>
+            <noscript>MASE · MIMIT · Terna · GME · ARERA · Eurostat</noscript>
         </div>
     </header>
 
@@ -46,6 +38,7 @@
         <button class="tab-btn" data-tab="elettricita">Elettricità</button>
         <button class="tab-btn" data-tab="variazioni">Variazioni %</button>
         <button class="tab-btn" data-tab="serie-storica">Serie storica</button>
+        <button class="tab-btn" data-tab="reportistica">Reportistica</button>
         <button class="tab-btn" data-tab="metodologia">Metodologia</button>
     </nav>
 
@@ -67,6 +60,10 @@
             <div class="loading">Caricamento serie storiche...</div>
         </section>
 
+        <section id="tab-reportistica" class="tab-content">
+            <div class="loading">Caricamento modulo reportistica...</div>
+        </section>
+
         <section id="tab-metodologia" class="tab-content">
             <div class="loading">Caricamento metodologia...</div>
         </section>
@@ -81,7 +78,7 @@
             Licenza dati MIMIT: IODL 2.0. Confini provinciali: <a href="https://github.com/openpolis/geojson-italy" target="_blank" rel="noopener">Openpolis</a> (CC-BY 4.0, su dati ISTAT).
         </p>
         <p class="footer-version">
-            Versione <span id="version">0.6.0-alpha</span> · <a href="https://github.com/poggig1971/dashboard-energia-italia" target="_blank" rel="noopener">Codice sorgente</a>
+            Versione <span id="version">0.7.0-alpha</span> · <a href="https://github.com/poggig1971/dashboard-energia-italia" target="_blank" rel="noopener">Codice sorgente</a>
         </p>
     </footer>
 
@@ -99,6 +96,7 @@
     <script src="assets/js/elettricita.js"></script>
     <script src="assets/js/variazioni.js"></script>
     <script src="assets/js/serie-storica.js"></script>
+    <script src="assets/js/reportistica.js"></script>
     <script src="assets/js/metodologia.js"></script>
     <script src="assets/js/app.js"></script>
 </body>
