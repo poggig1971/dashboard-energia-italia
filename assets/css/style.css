@@ -2577,3 +2577,22 @@ body { font-size: 13px; }
     .rep-grid { grid-template-columns: 1fr 1fr; }
     .mini { break-inside: avoid; page-break-inside: avoid; }
 }
+
+
+/* ---------- Reportistica: avvisi, dispersione, tooltip sui grafici ---------- */
+.rep-warn {
+    background: #fdf3ec; border-left: 3px solid var(--accent);
+    padding: 9px 12px; font-size: 12px; margin-bottom: 14px; border-radius: 0 3px 3px 0;
+}
+.rep-warn b { color: #8a3d18; }
+.rep-warn-inline { font-size: 9.5px; color: #f3d3c2; font-weight: 400; font-style: italic; }
+.rep-disp { margin-top: 12px; }
+.rep-disp .dv { grid-template-columns: 160px 1fr 84px; }
+.mini-ch { position: relative; }
+.mini-ch .g-tip { top: 4px; min-width: 150px; }
+
+@media print {
+    .rep-warn { -webkit-print-color-adjust: exact; print-color-adjust: exact; break-inside: avoid; }
+    .rep-warn-inline { color: #7a5c4a !important; }
+    .rep-disp { break-inside: avoid; page-break-inside: avoid; }
+}
