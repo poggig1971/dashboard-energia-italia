@@ -28,6 +28,10 @@ const ReportisticaTab = (function () {
     // peggior coppia DeltaE 15,4 in deuteranopia e 18,1 in visione normale,
     // tutte e quattro sopra il contrasto 3:1. Blu e rosso sono gli stessi poli
     // della scala divergente usata altrove, cosi' le due palette convivono.
+    // Soglie fisse della scala divergente, in centesimi di euro al litro.
+    const SOGLIA_LINEA = 0.5;   // sotto mezzo centesimo la differenza non si percepisce
+    const SOGLIA_FORTE = 2.0;   // circa l'1% del prezzo di un litro
+
     const CARB_COL = {
         benzina_self_eur_l: "#1a5c96",
         gasolio_self_eur_l: "#b03a2e",
@@ -435,13 +439,20 @@ const ReportisticaTab = (function () {
         let barre = "";
         if (val.length > 1) {
             const max = Math.max(...val.map(Math.abs), 0.5);
-            const col = v => Math.abs(v) < max * .2 ? "var(--div-3)"
-                : v > 0 ? (v > max * .55 ? "var(--div-5)" : "var(--div-4)")
-                : (v < -max * .55 ? "var(--div-1)" : "var(--div-2)");
+            // Soglie FISSE in centesimi di euro al litro, non percentuali del
+            // massimo: una soglia calcolata sul dato piu' estremo si sposta a
+            // ogni settimana e fa cambiare colore a province ferme. Mezzo
+            // centesimo e' sotto la soglia di percezione alla pompa; due
+            // centesimi valgono circa l'1% del prezzo.
+            const col = v => Math.abs(v) < SOGLIA_LINEA ? "var(--div-3)"
+                : v > 0 ? (v > SOGLIA_FORTE ? "var(--div-5)" : "var(--div-4)")
+                : (v < -SOGLIA_FORTE ? "var(--div-1)" : "var(--div-2)");
             barre = `<div class="dv-legend">
-                <span><i style="background:var(--div-1)"></i>sotto la media regionale</span>
-                <span><i style="background:var(--div-3)"></i>in linea</span>
-                <span><i style="background:var(--div-5)"></i>sopra</span>
+                <span><i style="background:var(--div-1)"></i>oltre ${fmt(SOGLIA_FORTE, 1)} c€ sotto</span>
+                <span><i style="background:var(--div-2)"></i>sotto</span>
+                <span><i style="background:var(--div-3)"></i>in linea (meno di ${fmt(SOGLIA_LINEA, 1)} c€)</span>
+                <span><i style="background:var(--div-4)"></i>sopra</span>
+                <span><i style="background:var(--div-5)"></i>oltre ${fmt(SOGLIA_FORTE, 1)} c€ sopra</span>
                 <span style="margin-left:auto">${esc(cSel.lab)}, centesimi di euro</span>
               </div><div class="dv">` +
               prov.filter(x => x.scarto != null).map(({ p, scarto }) => {
@@ -462,7 +473,11 @@ const ReportisticaTab = (function () {
                <th>Provincia</th>${CARB.map(c => `<th>${c.lab.replace(" self service", "")}<br><span class="rep-u">${c.u}</span></th>`).join("")}
                <th>Scarto su ${esc(sg.regione)}</th><th>Posizione naz.</th>
              </tr></thead><tbody>${tr}${tot}</tbody></table>
-             <div class="rep-disp">${barre}</div>`);
+             <div class="rep-disp">${barre}</div>
+             <p class="note-fonte">Le fasce di colore usano soglie fisse — meno di
+             ${fmt(SOGLIA_LINEA, 1)} c€ «in linea», oltre ${fmt(SOGLIA_FORTE, 1)} c€ scostamento marcato —
+             e non percentuali dello scarto massimo: una soglia calcolata sul dato più estremo
+             cambierebbe ogni settimana e farebbe cambiare colore a province ferme.</p>`);
     }
 
     /* --- 4. andamento settimanale --- */
@@ -529,15 +544,33 @@ const ReportisticaTab = (function () {
         const serie = D.arera.filter(r => r.tipo_dato === "elettricita_tutela_2700")
             .sort((a, b) => String(a.anno_mese).localeCompare(String(b.anno_mese)));
         if (serie.length < 2) return "";
-        const ult = serie.slice(-16);
-        const lab = ult.map(r => String(r.periodo || r.anno_mese));
-        const val = ult.map(r => num(r.valore));
+        // Due pannelli invece di uno: sulla serie lunga il picco del 2022 a
+        // 66 c€/kWh schiaccia tutto il resto e la dinamica recente diventa una
+        // linea piatta. Il contesto della crisi e il movimento attuale sono due
+        // domande diverse e vogliono due scale diverse.
+        const lungo = serie.slice(-16);
+        const breve = serie.slice(-8);
+        const lab = a => a.map(r => String(r.periodo || r.anno_mese));
+        const val = a => a.map(r => num(r.valore));
+        const picco = lungo.reduce((m, r) => (num(r.valore) || 0) > (num(m.valore) || 0) ? r : m, lungo[0]);
+
         return box("Elettricità — andamento", "DATO NAZIONALE — NON PROVINCIALE",
             `<p class="rep-p">Prezzo finale per il cliente domestico tipo in tutela, 2.700 kWh/anno.
              Serie <b>trimestrale</b> e <b>nazionale</b>: frequenza e unità diverse dai carburanti,
-             perciò un pannello a sé. Ultimi ${ult.length} trimestri, valori in c€/kWh.</p>` +
-            miniLinee(lab, val, null, "var(--navy)", true, "Italia", "c€/kWh") +
-            `<p class="note-fonte">Fonte: ARERA. Non esiste disaggregazione provinciale o regionale.</p>`);
+             perciò un pannello a sé. Valori in c€/kWh.</p>
+             <div class="rep-grid">
+               <div class="mini"><div class="mini-t">Dal ${esc(String(lungo[0].periodo || ""))} — contesto
+                 <span class="rep-u">${lungo.length} trimestri</span></div>
+                 ${miniLinee(lab(lungo), val(lungo), null, "var(--navy)", false, "Italia", "c€/kWh")}</div>
+               <div class="mini"><div class="mini-t">Ultimi ${breve.length} trimestri — dinamica recente
+                 <span class="rep-u">scala propria</span></div>
+                 ${miniLinee(lab(breve), val(breve), null, "var(--div-5)", false, "Italia", "c€/kWh")}</div>
+             </div>
+             <p class="note-fonte">I due pannelli hanno scale diverse e non vanno confrontati a occhio.
+             Sul primo il massimo della serie è ${fmt(num(picco.valore), 2)} c€/kWh
+             (${esc(String(picco.periodo || ""))}): quel picco comprime tutto il resto, perciò accanto
+             c'è la stessa serie sugli ultimi trimestri, dove il movimento in corso torna leggibile.
+             Fonte: ARERA. Non esiste disaggregazione provinciale o regionale.</p>`);
     }
 
     /* --- 5. variazioni: riferimenti scelti per DATA, non per posizione --- */
@@ -553,14 +586,35 @@ const ReportisticaTab = (function () {
         return { w: best, esatto: false, delta: settimaneTra(best, S.settimana), target };
     }
 
-    function sezVariazioni(sg) {
-        const idx = D.settimane.indexOf(S.settimana);
-        const rif = [1, 4, 13].map(n => riferimento(n))
-            .filter(r => r && r.w !== S.settimana)
-            .filter((r, i, arr) => arr.findIndex(x => x.w === r.w) === i);
-        if (idx > 0 && !rif.some(r => r.w === D.settimane[0])) {
-            rif.push({ w: D.settimane[0], esatto: true, inizio: true, delta: settimaneTra(D.settimane[0], S.settimana) });
+    /**
+     * Sceglie i riferimenti temporali evitando che si accavallino.
+     * Col ripiego per data puo' succedere che "una settimana prima" slitti a
+     * tre e finisca addosso alla colonna "quattro settimane prima": due
+     * istantanee a sette giorni l'una dall'altra non aggiungono nulla. Se due
+     * riferimenti cadono a meno di due settimane, il secondo va piu' indietro.
+     */
+    function scegliRiferimenti() {
+        const out = [];
+        const troppoVicino = w => out.some(x => Math.abs(settimaneTra(x.w, w)) < 2);
+        const prova = tentativi => {
+            for (const n of tentativi) {
+                const r = riferimento(n);
+                if (!r || r.w === S.settimana || troppoVicino(r.w)) continue;
+                out.push(r); return;
+            }
+        };
+        prova([1, 2]);          // la piu' recente disponibile
+        prova([4, 6, 8]);       // circa un mese
+        prova([13, 17, 21]);    // circa un trimestre
+        const w0 = D.settimane[0];
+        if (D.settimane.length > 1 && w0 !== S.settimana && !out.some(x => x.w === w0)) {
+            out.push({ w: w0, esatto: true, inizio: true, delta: settimaneTra(w0, S.settimana) });
         }
+        return out;
+    }
+
+    function sezVariazioni(sg) {
+        const rif = scegliRiferimenti();
         if (!rif.length) return box("Variazioni nel tempo", null,
             `<p class="rep-p">Nessuna settimana precedente disponibile per il confronto.</p>`);
 
@@ -653,7 +707,7 @@ const ReportisticaTab = (function () {
         return box("Fonti e accesso ai dati", "SOLA LETTURA",
             `<p class="rep-p">Ogni valore di questo rapporto è verificabile alla fonte. Gli indirizzi sono
              riportati per esteso perché restino utilizzabili anche sulla copia stampata.</p>
-             <table class="ance-table"><thead><tr>
+             <table class="ance-table rep-fonti"><thead><tr>
                <th>Ente</th><th>Che cosa fornisce</th><th>Indirizzo</th>
              </tr></thead><tbody>${righe}</tbody></table>` +
             (view ? `<div class="rep-sheet-box">

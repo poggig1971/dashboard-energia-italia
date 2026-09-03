@@ -2557,7 +2557,9 @@ body { font-size: 13px; }
        espansione automatica, ma devono restare visibili e andare a capo. */
     .rep-url { color: #1a3d6b !important; border-bottom: none; }
     .rep-sheet-box { break-inside: avoid; page-break-inside: avoid; }
-    .rep-box .ance-table td:last-child { word-break: break-all; }
+    /* Solo la tabella delle fonti: era scritta per ogni ultima colonna e
+       spezzava i numeri delle altre tabelle a meta' cifra ("+11,1 9%"). */
+    .rep-fonti td:last-child { word-break: break-all; }
 }
 
 
@@ -2597,3 +2599,8 @@ body { font-size: 13px; }
     .rep-warn-inline { color: #7a5c4a !important; }
     .rep-disp { break-inside: avoid; page-break-inside: avoid; }
 }
+
+
+/* I valori numerici non vanno mai spezzati fra le righe. */
+.ance-table td.num, .ance-table td.num .rep-u { white-space: nowrap; }
+.rep-fonti td, .rep-fonti td .rep-url { white-space: normal; }
