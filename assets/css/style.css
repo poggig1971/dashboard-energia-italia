@@ -2398,8 +2398,23 @@ body { font-size: 13px; }
 .rep-side {
     width: 250px; flex: none; background: #fff;
     border: 1px solid var(--color-border); border-radius: var(--radius);
-    padding: 12px; position: sticky; top: 122px;
+    padding: 12px;
+    /* Colonna con scorrimento proprio: resta agganciata sotto la testata
+       (alta 86px) e, quando le opzioni superano l'altezza della finestra,
+       scorre da sola invece di costringere a muovere tutta la pagina. */
+    position: sticky; top: 98px;
+    max-height: calc(100vh - 112px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
 }
+/* Barra di scorrimento discreta, in tinta con la palette */
+.rep-side::-webkit-scrollbar { width: 10px; }
+.rep-side::-webkit-scrollbar-track { background: #f4f6f9; border-radius: 5px; }
+.rep-side::-webkit-scrollbar-thumb {
+    background: #c3ccd8; border-radius: 5px; border: 2px solid #fff;
+}
+.rep-side::-webkit-scrollbar-thumb:hover { background: var(--navy-soft); }
+.rep-side { scrollbar-width: thin; scrollbar-color: #c3ccd8 #f4f6f9; }
 .rep-side-title {
     font-size: 10px; font-weight: 700; letter-spacing: .11em; color: var(--accent);
     border-bottom: 1px solid var(--color-border); padding-bottom: 7px; margin-bottom: 4px;
