@@ -1873,9 +1873,12 @@ html, body {
     font-weight: 500;
 }
 
-.ss-chart-hover-dot {
-    /* trasparente, solo per hover */
-}
+/* Colonne sensibili del grafico: trasparenti, servono solo ad agganciare il
+   puntatore su TUTTA l'altezza del grafico. Sostituiscono i vecchi cerchi a
+   meta' altezza, che coprivano il 6% dell'area. */
+.ss-chart-hover-col { fill: transparent; }
+.ss-chart-hover-col:hover { fill: rgba(30, 61, 107, .04); }
+.ss-crosshair { pointer-events: none; }
 
 .ss-empty-chart {
     text-align: center;

@@ -753,28 +753,54 @@ const SerieStoricaTab = (function () {
             }
         }
 
-        // Tooltip
+        /* LIVELLO DI LETTURA
+           Una colonna sensibile per ogni rilevazione, alta quanto il grafico,
+           piu' un crocino verticale che indica quale punto si sta leggendo.
+
+           Prima c'erano cerchi invisibili di raggio 12 posti a meta' altezza:
+           coprivano il 6% dell'altezza del grafico (una fascia di 24px su 420),
+           quindi passando il puntatore sopra una linea in alto o in basso non
+           usciva nulla. E con 90 trimestri il passo orizzontale e' di 5px:
+           cerchi da 24px di diametro si sovrapponevano a cinque a cinque, e il
+           valore mostrato non era quello sotto il cursore. */
         const tooltip = ensureTooltip();
-        g.selectAll(".ss-chart-hover-dot")
+        const passoX = data.length > 1 ? (x(1) - x(0)) : width;
+
+        const crocino = g.append("line")
+            .attr("class", "ss-crosshair")
+            .attr("y1", 0)
+            .attr("y2", height)
+            .attr("stroke", "#8b97a5")
+            .attr("stroke-width", 1)
+            .attr("stroke-dasharray", "3 3")
+            .style("opacity", 0)
+            .style("pointer-events", "none");
+
+        g.selectAll(".ss-chart-hover-col")
             .data(data)
             .enter()
-            .append("circle")
-            .attr("class", "ss-chart-hover-dot")
-            .attr("cx", (d, i) => x(i))
-            .attr("cy", height / 2)
-            .attr("r", 12)
+            .append("rect")
+            .attr("class", "ss-chart-hover-col")
+            .attr("data-i", (d, i) => i)
+            .attr("x", (d, i) => x(i) - passoX / 2)
+            .attr("y", 0)
+            .attr("width", Math.max(4, passoX))
+            .attr("height", height)
             .attr("fill", "transparent")
-            .style("cursor", "pointer")
-            .on("mouseover", function (event, d) {
+            .style("cursor", "crosshair")
+            .on("mouseenter", function (event, d) {
+                const i = +this.dataset.i;
+                crocino.attr("x1", x(i)).attr("x2", x(i)).style("opacity", 1);
                 tooltip.style("opacity", 1).html(tooltipHtmlMulti(d, componenti, unita));
             })
             .on("mousemove", function (event) {
                 const [mx, my] = d3.pointer(event, document.body);
                 tooltip
-                    .style("left", (mx + 12) + "px")
+                    .style("left", (mx + 14) + "px")
                     .style("top", (my - 12) + "px");
             })
-            .on("mouseout", function () {
+            .on("mouseleave", function () {
+                crocino.style("opacity", 0);
                 tooltip.style("opacity", 0);
             });
     }
