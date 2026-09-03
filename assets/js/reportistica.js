@@ -20,6 +20,17 @@ const ReportisticaTab = (function () {
         { k: "metano_eur_kg",      lab: "Metano",               u: "€/kg" },
     ];
 
+    // Palette categorica dei carburanti, validata con lo strumento della guida
+    // dataviz: peggior coppia DeltaE 15,4 in deuteranopia, 18,1 in visione
+    // normale, tutte e quattro sopra il contrasto 3:1. Blu e rosso sono gli
+    // stessi poli della scala divergente gia' usata altrove.
+    const CARB_COL = {
+        benzina_self_eur_l: "#1a5c96",
+        gasolio_self_eur_l: "#b03a2e",
+        gpl_eur_l:          "#c9820b",
+        metano_eur_kg:      "#6a3d9a",
+    };
+
     const SEZIONI = [
         ["sintesi",     "Sintesi provinciale"],
         ["confronto",   "Confronto territoriale"],
@@ -35,6 +46,7 @@ const ReportisticaTab = (function () {
         sigla: null,
         settimana: null,
         carb: "benzina_self_eur_l",
+        focus: false,
         sezioni: Object.fromEntries(SEZIONI.map(([k]) => [k, true])),
     };
 
@@ -123,8 +135,15 @@ const ReportisticaTab = (function () {
               ${D.settimane.slice().reverse().map(w => `<option value="${w}"${w === S.settimana ? " selected" : ""}>${formattaData(w)}</option>`).join("")}
             </select>
 
-            <label class="rep-lab" for="rep-carb">CARBURANTE DEL GRAFICO</label>
-            <select id="rep-carb" class="rep-sel">
+            <div class="rep-lab">GRAFICI</div>
+            <label class="rep-check rep-check-focus">
+              <input type="checkbox" id="rep-focus"${S.focus ? " checked" : ""}> Focus completo
+            </label>
+            <p class="rep-hint rep-hint-tight">Tutti i carburanti e l'elettricità, ciascuno con la propria
+               scala, più il confronto dei rincari a base 100.</p>
+
+            <label class="rep-lab" for="rep-carb">CARBURANTE DEL GRAFICO SINGOLO</label>
+            <select id="rep-carb" class="rep-sel"${S.focus ? " disabled" : ""}>
               ${CARB.map(c => `<option value="${c.k}"${c.k === S.carb ? " selected" : ""}>${c.lab}</option>`).join("")}
             </select>
 
@@ -146,6 +165,11 @@ const ReportisticaTab = (function () {
         document.getElementById("rep-prov").onchange = e => { S.sigla = e.target.value; renderReport(); };
         document.getElementById("rep-week").onchange = e => { S.settimana = e.target.value; renderReport(); };
         document.getElementById("rep-carb").onchange = e => { S.carb = e.target.value; renderReport(); };
+        document.getElementById("rep-focus").onchange = e => {
+            S.focus = e.target.checked;
+            document.getElementById("rep-carb").disabled = S.focus;
+            renderReport();
+        };
         document.getElementById("rep-print").onclick = () => window.print();
         host.querySelectorAll("#rep-sez input").forEach(cb => {
             cb.onchange = () => { S.sezioni[cb.dataset.sez] = cb.checked; renderReport(); };
@@ -169,14 +193,16 @@ const ReportisticaTab = (function () {
 
         if (S.sezioni.sintesi)     h += sezSintesi(prov);
         if (S.sezioni.confronto)   h += sezConfronto(prov);
-        if (S.sezioni.storico)     h += sezStorico(prov);
+        if (S.sezioni.storico)     h += (S.focus ? sezStoricoFocus(prov) : sezStorico(prov));
         if (S.sezioni.variazioni)  h += sezVariazioni(prov);
         if (S.sezioni.elettricita) h += sezElettricita();
         if (S.sezioni.fonti)       h += sezFonti();
         if (S.sezioni.note)        h += sezNote(prov);
 
         sheet.innerHTML = h;
-        if (S.sezioni.storico) attivaTooltipGrafico();
+        // Il livello interattivo esiste solo nel grafico singolo: in modalita'
+        // focus i pannelli portano etichette diritte e non hanno crocino.
+        if (S.sezioni.storico && !S.focus) attivaTooltipGrafico();
     }
 
     function box(titolo, badge, corpo) {
@@ -249,6 +275,90 @@ const ReportisticaTab = (function () {
     }
 
     /* --- 3. andamento settimanale --- */
+
+    function serieProv(prov, k) {
+        return D.settimane.map(w => {
+            const r = settimanaRows(w).find(x => x.provincia_sigla === prov.sigla);
+            return r ? num(r[k]) : null;
+        });
+    }
+    const serieNaz = k => D.settimane.map(w => media(settimanaRows(w), k));
+
+    /**
+     * Focus completo: un pannello per carburante, ciascuno con la PROPRIA scala.
+     * Non si possono mettere benzina (circa 2 EUR/l) e GPL (circa 0,77 EUR/l)
+     * sullo stesso asse senza schiacciare il secondo, e il metano e' in EUR/kg:
+     * unita' diversa, asse diverso per forza. I piccoli multipli risolvono
+     * entrambi i problemi tenendo il confronto visivo fra i pannelli.
+     */
+    function sezStoricoFocus(prov) {
+        const mini = CARB.map(c => {
+            const a = serieProv(prov, c.k), b = serieNaz(c.k);
+            if (a.filter(v => v != null).length < 2) {
+                return `<div class="mini"><div class="mini-t">${c.lab} <span class="rep-u">${c.u}</span></div>
+                        <div class="mini-empty">dato non disponibile per questa provincia</div></div>`;
+            }
+            return `<div class="mini"><div class="mini-t">${c.lab} <span class="rep-u">${c.u}</span></div>
+                    ${miniLinee(D.settimane, a, b, CARB_COL[c.k])}</div>`;
+        }).join("");
+
+        return box("Andamento settimanale — focus completo", "TUTTI I CARBURANTI",
+            `<p class="rep-p">Un pannello per carburante, ciascuno con la propria scala: benzina e GPL
+             differiscono di oltre un euro al litro e il metano si misura in €/kg, quindi un asse unico
+             renderebbe illeggibili le serie più basse. La linea in tinta è ${esc(prov.nome)},
+             quella grigia la media nazionale.</p>
+             <div class="dv-legend">
+               <span><i style="background:#8b97a5"></i>Media Italia</span>
+               <span>${esc(prov.nome)} — linea in tinta, un colore per carburante</span>
+               <span style="margin-left:auto">${D.settimane.length} settimane</span>
+             </div>
+             <div class="rep-grid">${mini}</div>`) +
+            sezIndicizzato(prov) + sezElettricitaGrafico();
+    }
+
+    /**
+     * Confronto dei rincari a base 100. Qui l'asse unico e' legittimo proprio
+     * perche' i valori non sono piu' prezzi ma numeri indice sulla stessa base:
+     * risponde alla domanda "che cosa e' rincarato di piu'", che i valori
+     * assoluti non possono mostrare.
+     */
+    function sezIndicizzato(prov) {
+        const serie = CARB.map(c => {
+            const v = serieProv(prov, c.k);
+            const i0 = v.findIndex(x => x != null);
+            if (i0 < 0) return null;
+            const base = v[i0];
+            return { lab: c.lab, col: CARB_COL[c.k], v: v.map(x => x == null ? null : x / base * 100) };
+        }).filter(Boolean);
+        if (!serie.length) return "";
+
+        return box("Rincari a confronto — base 100", "NUMERI INDICE",
+            `<p class="rep-p">Ogni carburante è posto uguale a 100 nella prima settimana disponibile
+             (${formattaData(D.settimane[0])}). La linea che sale più delle altre è quella rincarata di più,
+             indipendentemente dal prezzo di partenza.</p>` +
+            graficoIndice(D.settimane, serie) +
+            `<p class="note-fonte">I numeri indice non sono prezzi: servono a confrontare le variazioni,
+             non i livelli. Per i livelli si vedano i pannelli precedenti.</p>`);
+    }
+
+    /** Elettricita': serie ARERA trimestrale, nazionale. Frequenza e unita'
+        diverse dai carburanti, quindi pannello separato e cosi' etichettato. */
+    function sezElettricitaGrafico() {
+        const serie = D.arera.filter(r => r.tipo_dato === "elettricita_tutela_2700")
+            .sort((a, b) => String(a.anno_mese).localeCompare(String(b.anno_mese)));
+        if (serie.length < 2) return "";
+        const ult = serie.slice(-16);
+        const lab = ult.map(r => String(r.periodo || r.anno_mese));
+        const val = ult.map(r => num(r.valore));
+
+        return box("Elettricità — andamento", "DATO NAZIONALE — NON PROVINCIALE",
+            `<p class="rep-p">Prezzo finale per il cliente domestico tipo in tutela, 2.700 kWh/anno.
+             Serie <b>trimestrale</b> e <b>nazionale</b>: frequenza e unità diverse dai carburanti,
+             perciò un pannello a sé. Ultimi ${ult.length} trimestri, valori in c€/kWh.</p>` +
+            miniLinee(lab, val, null, "var(--navy)", true) +
+            `<p class="note-fonte">Fonte: ARERA. Non esiste disaggregazione provinciale o regionale.</p>`);
+    }
+
     function sezStorico(prov) {
         const c = CARB.find(x => x.k === S.carb);
         const serieP = [], serieN = [];
@@ -423,6 +533,14 @@ const ReportisticaTab = (function () {
         const lastB = [...sB].reverse().findIndex(v => v != null);
         const iB = lastB < 0 ? -1 : sB.length - 1 - lastB;
 
+        // Quando provincia e media nazionale quasi coincidono le due etichette
+        // di fine serie si sovrappongono: le separo di qualche pixel.
+        let dyA = 3.5, dyB = 3.5;
+        if (iA >= 0 && iB >= 0 && Math.abs(Y(sA[iA]) - Y(sB[iB])) < 13) {
+            const sopra = Y(sA[iA]) <= Y(sB[iB]);
+            dyA = sopra ? -3 : 10; dyB = sopra ? 10 : -3;
+        }
+
         const hot = labels.map((w, i) =>
             `<rect class="g-hot" x="${X(i) - iw / (labels.length * 2 || 1)}" y="${m.t}"
                    width="${Math.max(6, iw / labels.length)}" height="${ih}" fill="transparent"
@@ -441,9 +559,9 @@ const ReportisticaTab = (function () {
             <path d="${path(sB)}" fill="none" stroke="var(--div-1)" stroke-width="2" stroke-linejoin="round"/>
             <path d="${path(sA)}" fill="none" stroke="var(--div-5)" stroke-width="2" stroke-linejoin="round"/>
             ${iA >= 0 ? `<circle cx="${X(iA)}" cy="${Y(sA[iA])}" r="4" fill="var(--div-5)" stroke="#fff" stroke-width="2"/>
-              <text x="${X(iA) + 9}" y="${Y(sA[iA]) + 3.5}" class="g-lab" fill="var(--div-5)">${fmt(sA[iA], 3)}</text>` : ""}
+              <text x="${X(iA) + 9}" y="${Y(sA[iA]) + dyA}" class="g-lab" fill="var(--div-5)">${fmt(sA[iA], 3)}</text>` : ""}
             ${iB >= 0 ? `<circle cx="${X(iB)}" cy="${Y(sB[iB])}" r="4" fill="var(--div-1)" stroke="#fff" stroke-width="2"/>
-              <text x="${X(iB) + 9}" y="${Y(sB[iB]) + 3.5}" class="g-lab" fill="var(--div-1)">${fmt(sB[iB], 3)}</text>` : ""}
+              <text x="${X(iB) + 9}" y="${Y(sB[iB]) + dyB}" class="g-lab" fill="var(--div-1)">${fmt(sB[iB], 3)}</text>` : ""}
             <line class="g-cross" x1="0" x2="0" y1="${m.t}" y2="${m.t + ih}" stroke="#8b97a5" stroke-dasharray="3 3" opacity="0"/>
             ${hot}
           </svg>
@@ -462,7 +580,9 @@ const ReportisticaTab = (function () {
         const svg = wrap.querySelector(".g-svg");
         const cross = wrap.querySelector(".g-cross");
         const tip = wrap.querySelector(".g-tip");
-        const nomeA = wrap.querySelector(".dv-legend span").textContent.trim();
+        if (!svg || !cross || !tip) return;
+        const vocLegenda = wrap.querySelector(".dv-legend span");
+        const nomeA = vocLegenda ? vocLegenda.textContent.trim() : "Provincia";
 
         wrap.querySelectorAll(".g-hot").forEach(r => {
             r.addEventListener("mouseenter", () => {
@@ -479,6 +599,83 @@ const ReportisticaTab = (function () {
             });
         });
         svg.addEventListener("mouseleave", () => { cross.setAttribute("opacity", "0"); tip.hidden = true; });
+    }
+
+    /* ---------------- grafici del focus completo ---------------- */
+
+    /** Piccolo multiplo: una serie in tinta piu' un riferimento grigio. */
+    function miniLinee(labels, sA, sB, colore, larga) {
+        const W = larga ? 760 : 372, H = larga ? 200 : 148;
+        const m = { t: 12, r: larga ? 60 : 48, b: 20, l: larga ? 46 : 40 };
+        const iw = W - m.l - m.r, ih = H - m.t - m.b;
+        const tutti = sA.concat(sB || []).filter(v => v != null);
+        if (tutti.length < 2) return "";
+        let min = Math.min(...tutti), max = Math.max(...tutti);
+        const pad = (max - min) * 0.18 || 0.05; min -= pad; max += pad;
+
+        const X = i => m.l + (labels.length === 1 ? iw / 2 : i * iw / (labels.length - 1));
+        const Y = v => m.t + ih - (v - min) / (max - min) * ih;
+        const path = arr => arr.map((v, i) => v == null ? null : `${X(i)},${Y(v)}`)
+            .filter(Boolean).map((pt, i) => (i ? "L" : "M") + pt).join(" ");
+
+        const ticks = [min + pad, max - pad].map(v =>
+            `<line x1="${m.l}" x2="${m.l + iw}" y1="${Y(v)}" y2="${Y(v)}" stroke="#e6eaef"/>
+             <text x="${m.l - 6}" y="${Y(v) + 3}" text-anchor="end" class="g-ax">${fmt(v, larga ? 1 : 2)}</text>`).join("");
+
+        const xl = `<text x="${X(0)}" y="${H - 5}" text-anchor="start" class="g-ax">${formattaData(labels[0]) || esc(labels[0])}</text>
+                    <text x="${X(labels.length - 1)}" y="${H - 5}" text-anchor="end" class="g-ax">${formattaData(labels[labels.length - 1]) || esc(labels[labels.length - 1])}</text>`;
+
+        const li = sA.map((v, i) => v == null ? -1 : i).filter(i => i >= 0).pop();
+        return `<svg viewBox="0 0 ${W} ${H}" class="g-svg" role="img">
+            ${ticks}${xl}
+            ${sB ? `<path d="${path(sB)}" fill="none" stroke="#8b97a5" stroke-width="1.6"/>` : ""}
+            <path d="${path(sA)}" fill="none" stroke="${colore}" stroke-width="2" stroke-linejoin="round"/>
+            ${li != null ? `<circle cx="${X(li)}" cy="${Y(sA[li])}" r="3.5" fill="${colore}" stroke="#fff" stroke-width="1.6"/>
+              <text x="${X(li) + 7}" y="${Y(sA[li]) + 3.5}" class="g-lab" fill="${colore}">${fmt(sA[li], larga ? 2 : 3)}</text>` : ""}
+        </svg>`;
+    }
+
+    /** Numeri indice: asse unico legittimo, tutte le serie sulla stessa base. */
+    function graficoIndice(labels, serie) {
+        const W = 760, H = 262, m = { t: 14, r: 132, b: 30, l: 44 };
+        const iw = W - m.l - m.r, ih = H - m.t - m.b;
+        const tutti = serie.flatMap(s2 => s2.v).filter(v => v != null).concat([100]);
+        let min = Math.min(...tutti), max = Math.max(...tutti);
+        const pad = (max - min) * 0.14 || 1; min -= pad; max += pad;
+
+        const X = i => m.l + (labels.length === 1 ? iw / 2 : i * iw / (labels.length - 1));
+        const Y = v => m.t + ih - (v - min) / (max - min) * ih;
+        const path = arr => arr.map((v, i) => v == null ? null : `${X(i)},${Y(v)}`)
+            .filter(Boolean).map((pt, i) => (i ? "L" : "M") + pt).join(" ");
+
+        const ticks = [min + pad, 100, max - pad].map(v =>
+            `<line x1="${m.l}" x2="${m.l + iw}" y1="${Y(v)}" y2="${Y(v)}"
+                   stroke="${Math.abs(v - 100) < 0.01 ? "#9aa5b1" : "#e6eaef"}"
+                   ${Math.abs(v - 100) < 0.01 ? 'stroke-dasharray="4 3"' : ""}/>
+             <text x="${m.l - 6}" y="${Y(v) + 3.5}" text-anchor="end" class="g-ax">${fmt(v, 0)}</text>`).join("");
+
+        const passo = Math.max(1, Math.ceil(labels.length / 6));
+        const ultimo = labels.length - 1;
+        const xl = labels.map((_, i) => i).filter(i => i === ultimo || (i % passo === 0 && ultimo - i > passo * 0.6))
+            .map(i => `<text x="${X(i)}" y="${H - 9}" text-anchor="middle" class="g-ax">${formattaData(labels[i])}</text>`).join("");
+
+        // Etichette dirette a fine serie, separate verticalmente quando si
+        // sovrappongono: identita' mai affidata al solo colore.
+        const fine = serie.map(s2 => {
+            const i = s2.v.map((v, k) => v == null ? -1 : k).filter(k => k >= 0).pop();
+            return i == null ? null : { s: s2, i, y: Y(s2.v[i]) };
+        }).filter(Boolean).sort((a, b) => a.y - b.y);
+        for (let k = 1; k < fine.length; k++) {
+            if (fine[k].y - fine[k - 1].y < 13) fine[k].y = fine[k - 1].y + 13;
+        }
+
+        return `<div class="rep-chart"><svg viewBox="0 0 ${W} ${H}" class="g-svg" role="img"
+              aria-label="Numeri indice dei carburanti, base 100 alla prima settimana">
+            ${ticks}${xl}
+            ${serie.map(s2 => `<path d="${path(s2.v)}" fill="none" stroke="${s2.col}" stroke-width="2" stroke-linejoin="round"/>`).join("")}
+            ${fine.map(f => `<circle cx="${X(f.i)}" cy="${Y(f.s.v[f.i])}" r="3.5" fill="${f.s.col}" stroke="#fff" stroke-width="1.6"/>
+              <text x="${X(f.i) + 8}" y="${f.y + 3.5}" class="g-lab2" fill="${f.s.col}">${esc(f.s.lab.replace(" self service", ""))} ${fmt(f.s.v[f.i], 1)}</text>`).join("")}
+        </svg></div>`;
     }
 
     return { init };

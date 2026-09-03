@@ -2558,3 +2558,22 @@ body { font-size: 13px; }
     .rep-sheet-box { break-inside: avoid; page-break-inside: avoid; }
     .rep-box .ance-table td:last-child { word-break: break-all; }
 }
+
+
+/* ---------- Reportistica: focus completo (piccoli multipli) ---------- */
+.rep-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 10px; margin-top: 4px;
+}
+.mini { border: 1px solid var(--bd-cell); border-radius: 4px; padding: 8px 9px 4px; }
+.mini-t { font-size: 12px; font-weight: 600; color: var(--navy); margin-bottom: 2px; }
+.mini-empty { font-size: 11.5px; color: var(--color-text-light); font-style: italic; padding: 22px 0; text-align: center; }
+.g-lab2 { font-size: 10.5px; font-weight: 700; }
+.rep-check-focus { font-weight: 600; margin-top: 2px; }
+.rep-hint-tight { margin: 2px 0 0; }
+.rep-sel:disabled { background: #f2f4f7; color: #98a2ad; cursor: not-allowed; }
+
+@media print {
+    .rep-grid { grid-template-columns: 1fr 1fr; }
+    .mini { break-inside: avoid; page-break-inside: avoid; }
+}
