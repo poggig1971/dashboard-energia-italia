@@ -2226,19 +2226,19 @@ body { font-size: 13px; }
 }
 .header-logo img { height: 34px; padding: 5px 9px; border-radius: 5px; }
 .header-title { flex: 1 1 200px; min-width: 160px; overflow: hidden; }
-.header-title h1 { font-size: 15px; letter-spacing: .01em; }
+.header-title h1 { font-size: 14.5px; letter-spacing: .01em; }
 .header-subtitle { margin: 1px 0 0; font-size: 11px; opacity: 1; color: #a9c3e4; }
 
-.topbar-kpis { display: flex; gap: 6px; flex: none; }
+.topbar-kpis { display: flex; gap: 5px; flex: none; }
 .tb-kpi {
     background: rgba(255,255,255,.09);
     border: 1px solid rgba(255,255,255,.22);
     border-radius: var(--radius);
-    padding: 4px 10px; text-align: center; min-width: 74px;
+    padding: 4px 8px; text-align: center; min-width: 64px;
 }
-.tb-kpi b { display: block; font-size: 17.5px; font-weight: 700; line-height: 1.15; color: #fff;
+.tb-kpi b { display: block; font-size: 16px; font-weight: 700; line-height: 1.15; color: #fff;
             font-variant-numeric: tabular-nums; }
-.tb-kpi span { display: block; font-size: 8px; font-weight: 700; letter-spacing: .09em;
+.tb-kpi span { display: block; font-size: 7.5px; font-weight: 700; letter-spacing: .06em;
                color: #a9c3e4; margin-top: 1px; white-space: nowrap; }
 .tb-kpi.alert { background: var(--red-badge); border-color: var(--red-badge-bd); }
 .tb-kpi.alert span { color: #e8b8bc; }
@@ -2246,7 +2246,8 @@ body { font-size: 13px; }
 .header-actions { flex: none; gap: 6px; }
 .btn-icon {
     background: none; border: 1px solid rgba(255,255,255,.38);
-    width: auto; height: auto; padding: 6px 11px; font-size: 12px; border-radius: 5px;
+    width: auto; height: auto; padding: 5px 9px; font-size: 11.5px; border-radius: 5px;
+    white-space: nowrap;
 }
 .btn-icon:hover { background: rgba(255,255,255,.13); }
 .header-sources {
@@ -2376,7 +2377,7 @@ body { font-size: 13px; }
 .dashboard-footer a { color: #cfe0f4; }
 .dashboard-footer strong { color: #fff; }
 
-@media (max-width: 1380px) {
+@media (max-width: 1560px) {
     .dashboard-header .header-content { flex-wrap: wrap; }
     .header-actions { margin-left: auto; }
     .tab-nav { top: auto; position: static; }

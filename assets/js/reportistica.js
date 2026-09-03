@@ -48,7 +48,10 @@ const ReportisticaTab = (function () {
 
     const D = { rows: [], arera: [], anag: [], settimane: [], province: [], regioni: [], buchi: [] };
     const S = {
-        livello: "provincia",
+        // Apertura sul rapporto regionale del Piemonte: e' il territorio di
+        // competenza di ANCE Piemonte e Valle d'Aosta, quindi la vista utile
+        // nove volte su dieci. Il livello provinciale resta a un clic.
+        livello: "regione",
         sigla: null,
         regione: null,
         settimana: null,
