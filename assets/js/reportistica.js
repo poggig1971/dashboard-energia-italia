@@ -215,6 +215,10 @@ const ReportisticaTab = (function () {
               ${D.settimane.slice().reverse().map(w => `<option value="${w}"${w === S.settimana ? " selected" : ""}>${formattaData(w)}</option>`).join("")}
             </select>
 
+            <button id="rep-print" class="rep-btn">Stampa o salva in PDF</button>
+            <p class="rep-hint rep-hint-tight">Apre la stampa del browser: con «Salva come PDF»
+              si ottiene il rapporto impaginato, senza menu né filtri.</p>
+
             <div class="rep-lab">GRAFICI</div>
             <label class="rep-check rep-check-focus">
               <input type="checkbox" id="rep-focus"${S.focus ? " checked" : ""}> Focus completo
@@ -231,12 +235,10 @@ const ReportisticaTab = (function () {
             <div id="rep-sez">
               ${SEZIONI.map(([k, l]) => `<label class="rep-check"><input type="checkbox" data-sez="${k}"${S.sezioni[k] ? " checked" : ""}> ${l}</label>`).join("")}
             </div>
+            <p class="rep-hint">Per togliere data e numero di pagina ai margini del PDF,
+              apri «Altre impostazioni» nella finestra di stampa e togli la spunta a
+              «Intestazioni e piè di pagina».</p>
 
-            <button id="rep-print" class="rep-btn">Stampa o salva in PDF</button>
-            <p class="rep-hint">Il pulsante apre la stampa del browser: scegliendo
-              «Salva come PDF» si ottiene il rapporto impaginato, senza menu né filtri.
-              Per togliere data e numero di pagina ai margini, apri «Altre impostazioni»
-              nella finestra di stampa e togli la spunta a «Intestazioni e piè di pagina».</p>
           </aside>
 
           <div class="rep-sheet" id="rep-sheet"></div>

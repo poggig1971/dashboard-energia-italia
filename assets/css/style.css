@@ -2252,7 +2252,10 @@ body { font-size: 13px; }
 .btn-icon:hover { background: rgba(255,255,255,.13); }
 .header-sources {
     background: var(--navy-dk); color: #a9c3e4;
-    padding: 5px 13px; font-size: 10.5px; letter-spacing: .01em;
+    padding: 4px 13px; font-size: 10.5px; letter-spacing: .01em;
+    /* Il margine ereditato lasciava 12px di banda vuota fra la riga del logo
+       e quella delle fonti: testata piu' alta senza alcuna ragione. */
+    margin: 0;
 }
 .header-sources a { color: #cfe0f4; text-decoration: none; }
 .header-sources a:hover { text-decoration: underline; }
@@ -2604,3 +2607,16 @@ body { font-size: 13px; }
 /* I valori numerici non vanno mai spezzati fra le righe. */
 .ance-table td.num, .ance-table td.num .rep-u { white-space: nowrap; }
 .rep-fonti td, .rep-fonti td .rep-url { white-space: normal; }
+
+
+/* ---------- Scheda Reportistica evidenziata ----------
+   E' la scheda operativa, quella da cui esce il documento: si distingue
+   dalle altre. Il testo usa #b8461a e non l'arancione pieno --accent
+   (#d9541f), che su bianco si ferma a 4,01:1 e non arriva alla soglia di
+   leggibilita' per il testo; #b8461a da' 5,34:1. L'arancione pieno resta
+   sulla sottolineatura, dove la regola del contrasto testo non si applica. */
+.tab-btn[data-tab="reportistica"] { color: #b8461a; font-weight: 700; }
+.tab-btn[data-tab="reportistica"]:hover { color: #a83f14; background: #fdf3ec; }
+.tab-btn[data-tab="reportistica"].active {
+    color: #b8461a; border-bottom-color: var(--accent);
+}
