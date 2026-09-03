@@ -411,7 +411,13 @@ const SerieStoricaTab = (function () {
             al <strong>${escapeHtml(datiVisuali[datiVisuali.length-1].label)}</strong>.
             Unità: c€/kWh.
         `;
-        statusEl.innerHTML = `<div class="ss-status ss-status-ok">✓ ${_areraRecords.length} trimestri totali disponibili (2004-Q2 2026).</div>`;
+        // Copertura ricavata dai dati, non scritta a mano: la dicitura fissa
+        // "(2004-Q2 2026)" sarebbe diventata falsa al primo trimestre nuovo.
+        const primo = _areraRecords[0];
+        const ultimo = _areraRecords[_areraRecords.length - 1];
+        const copertura = (primo && ultimo && primo.periodo && ultimo.periodo)
+            ? ` (da ${escapeHtml(primo.periodo)} a ${escapeHtml(ultimo.periodo)})` : "";
+        statusEl.innerHTML = `<div class="ss-status ss-status-ok">✓ ${_areraRecords.length} trimestri totali disponibili${copertura}.</div>`;
 
         // Determina componenti da plottare
         const componentiAttive = (_selectedComponenti === "scomposte")
@@ -548,16 +554,27 @@ const SerieStoricaTab = (function () {
     function filtraPerRange(records) {
         const annoMin = annoMinimoRange();
         const annoMax = annoMassimoRange();
-        if (annoMin === null && annoMax === null) return records;
-        return records.filter(r => {
-            if (annoMin !== null && r.anno < annoMin) return false;
-            if (annoMax !== null && r.anno > annoMax) return false;
-            return true;
-        }).map(r => ({
-            ...r,
-            label: r.periodo,
-            xKey: r.anno + (TRIM_ORDER[r.trim] - 1) * 0.25,
-        }));
+
+        // L'arricchimento (label per gli assi e il sottotitolo, xKey per i
+        // marcatori degli eventi) deve avvenire SEMPRE. Qui c'era un ritorno
+        // anticipato quando non era impostato alcun range - cioe' nel caso
+        // predefinito "tutto" - che restituiva i record grezzi: senza label
+        // ogni tick dell'asse X stampava "undefined" e il sottotitolo
+        // diventava "dal  al ".
+        return records
+            .filter(r => {
+                if (annoMin !== null && r.anno < annoMin) return false;
+                if (annoMax !== null && r.anno > annoMax) return false;
+                return true;
+            })
+            .map(r => ({
+                ...r,
+                // Ripiego su anno_mese: se un giorno ARERA cambiasse il formato
+                // di "periodo" il grafico resterebbe leggibile invece di
+                // riempirsi di "undefined".
+                label: r.periodo || r.anno_mese || "",
+                xKey: (r.anno != null && r.trim) ? r.anno + (TRIM_ORDER[r.trim] - 1) * 0.25 : null,
+            }));
     }
 
     function filtraSettimanePerRange(settimane) {
